@@ -39,6 +39,7 @@ comfy.py                  # run(prompt) -> queue an API prompt, wait, return out
 test_tutorials.py [NN..]  # run every (or selected) tutorial through the API; writes test_results.json
 bench.py --base URL --name NAME [NN..]  # time each tutorial (first run + warm) on one server -> bench/NAME.json;
                           #   the setup page chart reads bench/*.json (machines listed in site/src/components/SpeedChart.astro)
+                          #   Run a Mac under `caffeinate -dims` from an awake Mac: idle sleep stalls jobs and ruins the timings
 publish.py [NN..]         # stage tutorials + models + layout scripts into ComfyUI userdata (tmp_*); --cleanup removes them;
                           #   --fetch copies the built workflows into workflows/Tutorials/ for the site
 layout/build_layout.js    # in-page builder: stage frames, column layout, orthogonal wire routing, notes, checks
@@ -91,6 +92,8 @@ images/                   # tutorial_results_gallery.jpg (one result per tutoria
   build time. The site mark and `public/favicon.svg` are Phosphor `graph` (bold) in orange.
 - New input image (a `LoadImage` file): copy it into `inputs/` (the export fails without it; it goes into the zip).
 - New node class from a custom node pack: add it to `CUSTOM_NODES` in `src/data/meta.ts` so the setup page and lesson list the pack.
+- "**Try this:**" items in notes feed the lesson page's Try this tab. `src/data/try.ts` maps each item (in order) to the
+  nodes it highlights; update it when items change (the build warns on a count mismatch).
 - New model file: add it to `models.json` (check the URL resolves). The builders put the links into each loader node's
   `properties.models`, so ComfyUI offers to download missing models. The setup page tells users to rely on that, so
   `npm run export` warns while any served workflow lacks the links (rebuild + `publish.py --fetch` before deploying).

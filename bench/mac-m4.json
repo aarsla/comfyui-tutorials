@@ -1,0 +1,114 @@
+{
+ "name": "mac-m4",
+ "system": {
+  "os": "darwin",
+  "ram_total": 34359738368,
+  "comfyui_version": "0.38.0",
+  "python_version": "3.13.12 (main, Feb 12 2026, 01:06:02) [Clang 21.1.4 ]",
+  "pytorch_version": "2.12.1"
+ },
+ "devices": [
+  {
+   "name": "mps",
+   "type": "mps",
+   "vram_total": 34359738368
+  }
+ ],
+ "lessons": {
+  "00": {
+   "first": 192.3,
+   "warm": [
+    175.1
+   ],
+   "samplers": 1
+  },
+  "01": {
+   "first": 192.0,
+   "warm": [
+    178.4
+   ],
+   "samplers": 1
+  },
+  "02": {
+   "first": 387.7,
+   "warm": [
+    369.8
+   ],
+   "samplers": 3
+  },
+  "03": {
+   "first": 229.0,
+   "warm": [
+    148.7
+   ],
+   "samplers": 1
+  },
+  "05": {
+   "error": "[[\"execution_error\", {\"prompt_id\": \"ac15534a-d86d-4efb-8cdc-e63d4d3f37a1\", \"node_id\": \"23\", \"node_type\": \"KSampler\", \"executed\": [\"2\", \"1\", \"3\", \"4\", \"21\", \"22\", \"20\", \"9\"], \"exception_message\": \"Trying to convert Float8_e4m3fn to the MPS backend but it does not have support for that dtype.\\n\", \"exception_type\": \"TypeError\", \"traceback\": [\"  File \\\"/Volumes/Satechi/ComfyUI/ComfyUI/ComfyUI/execution.py\\\", line 547, in execute\\n    output_data, output_ui, has_subgraph, has_pending_tasks = await ge",
+   "samplers": 4
+  },
+  "06": {
+   "error": "[[\"execution_error\", {\"prompt_id\": \"9113c7c2-1440-4943-8b0d-a4de35b458d1\", \"node_id\": \"21\", \"node_type\": \"KSampler\", \"executed\": [\"2\", \"6\", \"1\", \"5\", \"3\", \"4\", \"20\"], \"exception_message\": \"Trying to convert Float8_e4m3fn to the MPS backend but it does not have support for that dtype.\\n\", \"exception_type\": \"TypeError\", \"traceback\": [\"  File \\\"/Volumes/Satechi/ComfyUI/ComfyUI/ComfyUI/execution.py\\\", line 547, in execute\\n    output_data, output_ui, has_subgraph, has_pending_tasks = await get_outpu",
+   "samplers": 4
+  },
+  "07": {
+   "error": "[[\"execution_error\", {\"prompt_id\": \"1915be7d-3a30-401b-bc96-da1ddf96bcd9\", \"node_id\": \"40\", \"node_type\": \"KSampler\", \"executed\": [\"2\", \"6\", \"1\", \"5\", \"3\", \"8\", \"9\", \"7\"], \"exception_message\": \"Trying to convert Float8_e4m3fn to the MPS backend but it does not have support for that dtype.\\n\", \"exception_type\": \"TypeError\", \"traceback\": [\"  File \\\"/Volumes/Satechi/ComfyUI/ComfyUI/ComfyUI/execution.py\\\", line 547, in execute\\n    output_data, output_ui, has_subgraph, has_pending_tasks = await get_o",
+   "samplers": 3
+  },
+  "08": {
+   "first": 191.5,
+   "warm": [
+    174.3
+   ],
+   "samplers": 1
+  },
+  "09": {
+   "first": 17.7,
+   "warm": [],
+   "samplers": 0
+  },
+  "11": {
+   "first": 235.8,
+   "warm": [
+    222.8
+   ],
+   "samplers": 1
+  },
+  "12": {
+   "first": 377.4,
+   "warm": [
+    386.7
+   ],
+   "samplers": 2
+  },
+  "14": {
+   "first": 1273.9,
+   "warm": [],
+   "samplers": 7,
+   "note": "first run read from ComfyUI history; warm run lost to system sleep"
+  },
+  "04": {
+   "first": 104.2,
+   "warm": [
+    54.9
+   ],
+   "samplers": 1
+  },
+  "10": {
+   "first": 10.3,
+   "warm": [],
+   "samplers": 0
+  },
+  "13": {
+   "first": 262.9,
+   "warm": [
+    280.2
+   ],
+   "samplers": 1
+  },
+  "15": {
+   "error": "[[\"execution_error\", {\"prompt_id\": \"9933b4eb-ca11-4309-9232-dd8859b79aa2\", \"node_id\": \"10\", \"node_type\": \"KSampler\", \"executed\": [\"2\", \"6\", \"1\", \"5\", \"3\", \"4\"], \"exception_message\": \"Trying to convert Float8_e4m3fn to the MPS backend but it does not have support for that dtype.\\n\", \"exception_type\": \"TypeError\", \"traceback\": [\"  File \\\"/Volumes/Satechi/ComfyUI/ComfyUI/ComfyUI/execution.py\\\", line 547, in execute\\n    output_data, output_ui, has_subgraph, has_pending_tasks = await get_output_data",
+   "samplers": 5
+  }
+ }
+}
