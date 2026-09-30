@@ -5,6 +5,20 @@ const app = window.app || window.comfyAPI?.app?.app;
 const LG = window.LiteGraph;
 const tutorials = await fetch('/api/userdata/tmp_tutorials.json').then(r => r.json());
 const ONLY = (await fetch('/api/userdata/tmp_only.json').then(r => r.ok ? r.json() : null).catch(() => null)) || null;
+const MODELS = await fetch('/api/userdata/tmp_models.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+// Download links for every model file a node loads (properties.models, the same shape the official templates use),
+// so ComfyUI offers to download missing models when the workflow is opened.
+const attachModelLinks = g => {
+  const all = new Map();
+  for (const n of g._nodes) {
+    const models = (n.widgets || []).map(w => w.value).filter(v => typeof v === 'string' && MODELS[v])
+      .map(v => ({ name: v, url: MODELS[v].url, directory: MODELS[v].folder }));
+    if (!models.length) continue;
+    n.properties = { ...n.properties, models };
+    models.forEach(m => all.set(m.name, m));
+  }
+  return [...all.values()];
+};
 const T = LG.NODE_TITLE_HEIGHT || 30, HINT_H = 118, GAP = 40, COL_GAP = 110;
 const report = [];
 
@@ -54,6 +68,7 @@ for (const t of tutorials) {
     g.add(note);
   }
   g.setDirtyCanvas(true, true);
+  const models = attachModelLinks(g);
   const data = g.serialize();
   const r = await fetch('/api/userdata/' + encodeURIComponent('workflows/Tutorials/' + t.file) + '?overwrite=true',
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -63,6 +78,6 @@ for (const t of tutorials) {
     const a = boxes[i], b = boxes[j];
     if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) ov++;
   }
-  report.push(`${r.status} ${t.file}: exercise layout, wires=${(data.links || []).length} overlaps=${ov}`);
+  report.push(`${r.status} ${t.file}: models=${models.length} exercise layout, wires=${(data.links || []).length} overlaps=${ov}`);
 }
 return report.join('\n');

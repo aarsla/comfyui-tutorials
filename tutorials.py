@@ -174,7 +174,7 @@ T.append({"file": "01 - Exercise - Wire It Yourself.json", "prompt": sdxl_basic(
 
 **Rules:** drag from an **output dot** (right side) to an **input dot** (left side). Only matching types/colours connect. Dragging onto an already-connected input replaces the old link.
 
-**Connections to make (7):**
+**Connections to make (9):**
 1. Load Checkpoint **MODEL** → KSampler *model*
 2. Load Checkpoint **CLIP** → Positive Prompt *clip*
 3. Load Checkpoint **CLIP** → Negative Prompt *clip*
@@ -185,7 +185,7 @@ T.append({"file": "01 - Exercise - Wire It Yourself.json", "prompt": sdxl_basic(
 8. Load Checkpoint **VAE** → VAE Decode *vae*
 9. VAE Decode **IMAGE** → Save Image *images*
 
-(Yes, that's 9 - two outputs feed two inputs each.)
+(9 wires for 7 nodes: the CLIP output feeds both prompts.)
 
 **Tip:** drag from an output and release on **empty canvas** → a search box opens showing only nodes that accept that type.
 

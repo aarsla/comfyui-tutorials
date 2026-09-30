@@ -1,0 +1,64 @@
+{
+  "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors": {
+    "folder": "checkpoints",
+    "url": "https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors"
+  },
+  "controlnet-union-sdxl-promax.safetensors": {
+    "folder": "controlnet",
+    "url": "https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model_promax.safetensors",
+    "rename": true
+  },
+  "ip-adapter-plus_sdxl_vit-h.safetensors": {
+    "folder": "ipadapter",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors"
+  },
+  "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors": {
+    "folder": "clip_vision",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors",
+    "rename": true
+  },
+  "z_image_turbo_bf16.safetensors": {
+    "folder": "diffusion_models",
+    "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors"
+  },
+  "qwen_3_4b.safetensors": {
+    "folder": "text_encoders",
+    "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
+  },
+  "ae.safetensors": {
+    "folder": "vae",
+    "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors"
+  },
+  "krea2_turbo_fp8_scaled.safetensors": {
+    "folder": "diffusion_models",
+    "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors"
+  },
+  "qwen3vl_4b_fp8_scaled.safetensors": {
+    "folder": "text_encoders",
+    "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors"
+  },
+  "qwen_image_vae.safetensors": {
+    "folder": "vae",
+    "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors"
+  },
+  "krea2_darkbrush.safetensors": {
+    "folder": "loras",
+    "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/loras/krea2_darkbrush.safetensors"
+  },
+  "flux-2-klein-4b.safetensors": {
+    "folder": "diffusion_models",
+    "url": "https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors"
+  },
+  "flux2-vae.safetensors": {
+    "folder": "vae",
+    "url": "https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b/resolve/main/split_files/vae/flux2-vae.safetensors"
+  },
+  "4x-UltraSharp.safetensors": {
+    "folder": "upscale_models",
+    "url": "https://huggingface.co/Kim2091/UltraSharp/resolve/main/4x-UltraSharp.safetensors"
+  },
+  "birefnet.safetensors": {
+    "folder": "background_removal",
+    "url": "https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors"
+  }
+}

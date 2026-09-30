@@ -6,6 +6,20 @@ const app = window.app || window.comfyAPI?.app?.app;
 const LG = window.LiteGraph;
 const tutorials = await fetch('/api/userdata/tmp_tutorials.json').then(r => r.json());
 const ONLY = (await fetch('/api/userdata/tmp_only.json').then(r => r.ok ? r.json() : null).catch(() => null)) || null;
+const MODELS = await fetch('/api/userdata/tmp_models.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+// Download links for every model file a node loads (properties.models, the same shape the official templates use),
+// so ComfyUI offers to download missing models when the workflow is opened.
+const attachModelLinks = g => {
+  const all = new Map();
+  for (const n of g._nodes) {
+    const models = (n.widgets || []).map(w => w.value).filter(v => typeof v === 'string' && MODELS[v])
+      .map(v => ({ name: v, url: MODELS[v].url, directory: MODELS[v].folder }));
+    if (!models.length) continue;
+    n.properties = { ...n.properties, models };
+    models.forEach(m => all.set(m.name, m));
+  }
+  return [...all.values()];
+};
 
 const FRAMES = [
   { title: '1 · MODELS', color: '#A88' },
@@ -305,9 +319,10 @@ for (const t of tutorials) {
     }
     verdict = diffs.length ? 'MISMATCH ' + diffs.slice(0, 5).join(',') : 'identical';
   }
+  const models = attachModelLinks(g);
   const data = g.serialize();
   const r = await fetch('/api/userdata/' + encodeURIComponent('workflows/Tutorials/' + t.file) + '?overwrite=true',
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-  report.push(`${r.status} ${t.file}: layers=${NL} reroutes=${reroutes} overlaps=${ov} wire-through-node=${hits} prompt=${verdict}`);
+  report.push(`${r.status} ${t.file}: models=${models.length} layers=${NL} reroutes=${reroutes} overlaps=${ov} wire-through-node=${hits} prompt=${verdict}`);
 }
 return report.join('\n');
