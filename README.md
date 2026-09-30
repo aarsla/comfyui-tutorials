@@ -17,6 +17,8 @@ Keep it open next to ComfyUI while you work through the tutorials. For each one 
 
 It also has a setup guide, an index of every node the course uses and the full glossary.
 
+To get every workflow and input image at once, download [comfyui-tutorials.zip](https://aarsla.github.io/comfyui-tutorials/workflows/comfyui-tutorials.zip) and unzip it into your ComfyUI folder (the one with `models`, `input` and `user` in it). The workflows then show up in the Workflows panel (`W`) under Tutorials.
+
 ![A lesson on the website: the graph on the left, the selected node's notes on the right](images/site_lesson.jpg)
 
 ## Tutorials
@@ -56,6 +58,7 @@ make_samples.py           generate sample input images with Z-Image
 get_loras.py              download and sha256-check the Krea-2 style LoRAs
 images/                   result gallery and sampler shootout sheets
 workflows/Tutorials/      the built workflows, as saved in ComfyUI (served by the site)
+inputs/                   the input images the tutorials load (served by the site, in the zip)
 models.json               model files with folder and download URL
 site/                     the website (Astro)
 ```

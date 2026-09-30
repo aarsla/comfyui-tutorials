@@ -10,6 +10,7 @@ on:
       - tutorials.py
       - models.json
       - workflows/Tutorials/**
+      - inputs/**
       - .github/workflows/deploy.yml
   workflow_dispatch:
 

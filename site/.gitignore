@@ -4,3 +4,4 @@ dist/
 src/data/tutorials.json
 public/workflows/
 src/data/models.json
+public/inputs/

@@ -350,7 +350,7 @@ Here the same prompt runs at strength **0 · 0.5 · 0.8 · 1.2** with the *darkb
     ("10", "More free Krea-2 LoRAs", """Official ones on Hugging Face **Comfy-Org/Krea-2 → loras** (≈450 MB each):
 `softwatercolor` · `retroanime` · `neondrip` · `kidsdrawing` · `dotmatrix` · `vintagetarot` · `rainywindow` · `sunsetblur` (+ `darkbrush`, which you have).
 
-**Get one:** open the Model Library (**m**) and search, or download from the website into `D:\\Comfy-Desktop\\ComfyUI-Shared\\models\\loras`, then press **R** in ComfyUI to refresh the lists.
+**Get one:** open the Model Library (**m**) and search, or download from the website into the `models/loras` folder, then press **R** in ComfyUI to refresh the lists.
 
 **Stacking:** chain two LoRA nodes: Loader → LoRA A → LoRA B → KSampler. Lower each strength (e.g. 0.6 + 0.5) so they don't fight.
 

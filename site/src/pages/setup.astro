@@ -2,8 +2,8 @@
 import Icon from '../components/Icon.astro';
 import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
-import { HOWTO_MD, TUTORIALS, lessonUrl } from '../lib/tutorials';
-import { MODEL_FILES } from '../data/meta';
+import { HOWTO_MD, TUTORIALS, lessonUrl, url } from '../lib/tutorials';
+import { MODEL_FILES, packsFor } from '../data/meta';
 import { linkTerms } from '../lib/terms';
 
 // Matched sets: a model, its text encoder (with the CLIPLoader type) and its VAE belong together.
@@ -37,6 +37,7 @@ const FAMILIES: { name: string; note: string; files: string[] }[] = [
 ];
 const usedIn = (file: string) => TUTORIALS.filter((t) => t.models.includes(file));
 const inputs = [...new Set(TUTORIALS.flatMap((t) => t.images))].map((f) => ({ f, lessons: TUTORIALS.filter((t) => t.images.includes(f)) }));
+const packs = [...new Map(TUTORIALS.flatMap((t) => packsFor(t.graph).map((p) => [p.pack, { ...p, lessons: TUTORIALS.filter((u) => packsFor(u.graph).some((q) => q.pack === p.pack)) }]))).values()];
 const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
 ---
 <Base title="Setup and models | Learn ComfyUI" description="Install ComfyUI, get the models each lesson needs, and load a workflow.">
@@ -51,17 +52,28 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
       <span class="mono n">STEP 1</span>
       <h2 class="display">Install ComfyUI</h2>
       <p><a href="https://www.comfy.org/download">Download Comfy Desktop</a> for Windows or macOS and install it. It sets up Python and the models folder for you.</p>
+      <p class="where">Already have ComfyUI? Update it first. The lessons use recent built-in nodes, and an older version shows them as missing.</p>
     </article>
     <article class="step">
       <span class="mono n">STEP 2</span>
-      <h2 class="display">Load a workflow</h2>
-      <p>Every lesson has a Download workflow button. Drag the file onto the ComfyUI canvas. Start with <a href={lessonUrl(TUTORIALS[0])}>00: node basics</a>.</p>
+      <h2 class="display">Add the workflows</h2>
+      <p>Download all lessons and their input images as one zip. Unzip it into your ComfyUI folder, the one with <code>models</code>, <code>input</code> and <code>user</code> in it. Press <kbd>Ctrl</kbd>+<kbd>R</kbd> in ComfyUI, then <kbd>W</kbd> opens the Workflows panel with a Tutorials folder. Start with <a href={lessonUrl(TUTORIALS[0])}>00: node basics</a>.</p>
+      <a class="btn btn-primary zip" href={url('workflows/comfyui-tutorials.zip')} download><Icon name="file-zip" /> Download all workflows</a>
+      <p class="where">Comfy Desktop keeps that folder in <code>Documents\ComfyUI</code> on Windows and <code>~/Documents/ComfyUI</code> on macOS, or in the folder you picked during install.</p>
+      <p class="where">One lesson at a time: drag its file onto the canvas and press <kbd>Ctrl</kbd>+<kbd>S</kbd> so it stays in the Workflows panel.</p>
     </article>
     <article class="step">
       <span class="mono n">STEP 3</span>
       <h2 class="display">Download missing models</h2>
       <p>If the workflow needs a model you don't have, ComfyUI lists it and offers to download it into the right folder. Click Download, wait for it to finish, then press Run.</p>
     </article>
+  </section>
+
+  <section class="wrap custom">
+    <div class="sec-head"><h2 class="display">Custom nodes</h2><span>Everything else is built into ComfyUI.</span></div>
+    {packs.map((p) => (
+      <p><a href={p.url}><code>{p.pack}</code></a>, used in {p.lessons.map((t, i) => <>{i ? ', ' : ''}<a href={lessonUrl(t)}>{t.n}</a></>)}. In ComfyUI, open the Manager, search for the pack, install it and restart ComfyUI. If you open the lesson first, the Manager's Install Missing Custom Nodes finds it for you.</p>
+    ))}
   </section>
 
   <section class="wrap">
@@ -104,11 +116,11 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
   <section class="wrap two">
     <div>
       <div class="sec-head"><h2 class="display">Input images</h2></div>
-      <p class="muted">Lessons that start from an image load these from ComfyUI's <code>input</code> folder. They are art from Meridian.</p>
+      <p class="muted">Lessons that start from an image load these from ComfyUI's <code>input</code> folder. They are art from Meridian and come with the zip in step 2.</p>
       <table>
         <tbody>
           {inputs.map(({ f, lessons }) => (
-            <tr><td><code>{f}</code></td><td class="lessons">{lessons.map((t) => <a href={lessonUrl(t)}>{t.n}</a>)}</td></tr>
+            <tr><td><a class="dl" href={url(`inputs/${f}`)} download={f}><Icon name="download-simple" size={14} /><code>{f}</code></a></td><td class="lessons">{lessons.map((t) => <a href={lessonUrl(t)}>{t.n}</a>)}</td></tr>
           ))}
         </tbody>
       </table>
@@ -129,6 +141,10 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
   .step .n { font-size: 12px; color: var(--orange-text); letter-spacing: 0.1em; }
   .step h2 { margin: 0; font-size: 22px; }
   .step p { margin: 0; color: var(--text-2); }
+  .custom { padding-bottom: 40px; }
+  .custom p { margin: 0; color: var(--text-2); max-width: 900px; }
+  .step .zip { align-self: flex-start; margin: 4px 0; }
+  .step .where { font-size: 15px; color: var(--muted); }
   .sec-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 18px; color: var(--muted); }
   .sec-head h2 { margin: 0; font-size: 26px; font-weight: 600; color: var(--text); }
   .families { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }

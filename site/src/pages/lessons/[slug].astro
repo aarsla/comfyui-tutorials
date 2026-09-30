@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Graph from '../../components/Graph.astro';
 import { TUTORIALS, lessonUrl, url, type Tutorial } from '../../lib/tutorials';
 import { layoutGraph } from '../../lib/graph';
-import { MODEL_FILES, MODULES, NODE_INFO, STAGES } from '../../data/meta';
+import { MODEL_FILES, MODULES, NODE_INFO, STAGES, packsFor } from '../../data/meta';
 import { explainWire } from '../../data/wires';
 import TypeChip from '../../components/TypeChip.astro';
 import { linkTerms } from '../../lib/terms';
@@ -184,7 +184,8 @@ const connections = layout.wires.map((w) => {
                   <span class="muted"> in models/{MODEL_FILES[m]?.folder ?? '?'}{MODEL_FILES[m]?.rename ? ', rename after download' : ''}</span>
                 </li>
               ))}
-              {t.images.map((m) => <li><code>{m}</code> <span class="muted">in the input folder</span></li>)}
+              {t.images.map((m) => <li><a href={url(`inputs/${m}`)} download={m}><code>{m}</code></a> <span class="muted">in the input folder</span></li>)}
+              {packsFor(t.graph).map((p) => <li><a href={p.url}><code>{p.pack}</code></a> <span class="muted">custom nodes, install from the Manager</span></li>)}
             </ul>
             <p class="auto">Missing a model? ComfyUI offers to download it when you open the workflow.</p>
             <a href={url('setup/')}>Where do these files go?</a>

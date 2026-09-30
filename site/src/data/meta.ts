@@ -25,7 +25,7 @@ export interface LessonMeta {
 // Keyed by the two-digit number at the start of each tutorial file name.
 export const LESSONS: Record<string, LessonMeta> = {
   '00': { module: 'foundations', title: 'Start here: node basics', short: 'Node basics', desc: 'The smallest complete text-to-image graph, node by node.', model: 'SDXL', results: [{ src: 't00.jpg', caption: 'Survey ship above the cloud layer' }] },
-  '01': { module: 'foundations', title: 'Exercise: wire it yourself', short: 'Wire it', desc: 'The same graph with every wire removed. Reconnect it.', model: 'SDXL', results: [] },
+  '01': { module: 'foundations', title: 'Exercise: wire it yourself', short: 'Wire it', desc: 'The same graph with every wire removed. Reconnect it.', model: 'SDXL', results: [{ src: 't01.jpg', caption: 'Maintenance robot, once wired' }] },
   '02': { module: 'foundations', title: 'Settings lab: seed, steps, CFG', short: 'Settings', desc: 'Three samplers, one prompt, different settings side by side.', model: 'SDXL', results: [{ src: 't02.jpg', caption: 'Engineer portrait' }] },
   '03': { module: 'models', title: 'Z-Image Turbo, separate loaders', short: 'Z-Image', desc: 'Three loader nodes instead of one checkpoint.', model: 'Z-Image', results: [{ src: 't03.jpg', caption: 'Cockpit' }] },
   '04': { module: 'models', title: 'Flux.2 Klein, the sampler taken apart', short: 'Klein', desc: 'Noise, guider, sampler and sigmas as separate nodes.', model: 'Klein 4B', results: [{ src: 't04.jpg', caption: 'Maintenance robot in the pod bay' }] },
@@ -33,7 +33,7 @@ export const LESSONS: Record<string, LessonMeta> = {
   '06': { module: 'models', title: 'Krea-2 LoRAs: strength and stacking', short: 'LoRAs', desc: 'The same LoRA at four strengths.', model: 'Krea-2', results: [{ src: 't06.jpg', caption: 'LoRA strength 0.8' }] },
   '07': { module: 'images', title: 'Image to image: denoise', short: 'Img2img', desc: 'Denoise sets how much of the input image changes.', model: 'Krea-2', results: [{ src: 't07.jpg', caption: 'Corridor at night' }] },
   '08': { module: 'images', title: 'Inpainting with masks', short: 'Inpaint', desc: 'Repaint only the masked area.', model: 'SDXL', results: [{ src: 't08.jpg', caption: 'Inpainting result' }] },
-  '09': { module: 'images', title: 'Upscaling', short: 'Upscale', desc: 'Model upscalers compared with plain resizing.', model: 'Upscalers', results: [] },
+  '09': { module: 'images', title: 'Upscaling', short: 'Upscale', desc: 'Model upscalers compared with plain resizing.', model: 'Upscalers', results: [{ src: 't09.jpg', caption: 'Left: plain resize. Right: 4x-UltraSharp' }] },
   '10': { module: 'images', title: 'Remove background', short: 'Remove BG', desc: 'Cut the subject out with BiRefNet.', model: 'BiRefNet', results: [{ src: 't10.jpg', caption: 'Crew suit on a new background' }] },
   '11': { module: 'control', title: 'ControlNet: copy a pose', short: 'ControlNet', desc: 'Take the pose from the crew suit sheet.', model: 'SDXL', results: [{ src: 't11.jpg', caption: 'Result in the crew suit pose' }] },
   '12': { module: 'control', title: 'Style transfer from a reference image', short: 'Style ref', desc: 'IP-Adapter borrows the look of an image.', model: 'SDXL', results: [{ src: 't12.jpg', caption: 'Style transfer result' }] },
@@ -143,6 +143,15 @@ export const NODE_INFO: Record<string, string> = {
   CLIPVisionLoader: 'Loads the image encoder IP-Adapter needs.',
   IPAdapterAdvanced: 'Applies the look of a reference image to the model.',
 };
+
+// Node classes that are not built into ComfyUI: the custom node pack that provides them.
+// Install a pack from ComfyUI's Manager (search its name), then restart ComfyUI.
+export const CUSTOM_NODES: Record<string, { pack: string; url: string }> = {
+  IPAdapterModelLoader: { pack: 'ComfyUI_IPAdapter_plus', url: 'https://github.com/cubiq/ComfyUI_IPAdapter_plus' },
+  IPAdapterAdvanced: { pack: 'ComfyUI_IPAdapter_plus', url: 'https://github.com/cubiq/ComfyUI_IPAdapter_plus' },
+};
+export const packsFor = (graph: Record<string, { class_type: string }>) =>
+  [...new Map(Object.values(graph).flatMap((n) => CUSTOM_NODES[n.class_type] ? [CUSTOM_NODES[n.class_type]] : []).map((p) => [p.pack, p])).values()];
 
 // Where each model file comes from (repo-root models.json, copied here by scripts/export.mjs).
 // rename: the file is published under another name; save it with the name the workflows use.

@@ -44,6 +44,7 @@ layout/build_exercise.js  # in-page builder for layout:"exercise" tutorials (cla
 make_samples.py           # generate sample input images with Z-Image
 get_loras.py              # download + sha256-verify the Krea-2 style LoRAs
 workflows/Tutorials/      # built UI workflows fetched from ComfyUI (served by the site; carry model download links)
+inputs/                   # input images the tutorials load (copied from ComfyUI input/; the site serves + zips them)
 site/                     # Astro site for GitHub Pages (npm run dev / build / check); reads tutorials.py + models.json
 images/                   # tutorial_results_gallery.jpg (one result per tutorial), sampler shootout sheets
 ```
@@ -86,6 +87,8 @@ images/                   # tutorial_results_gallery.jpg (one result per tutoria
   entries in `src/data/meta.ts`; new lessons need a `LESSONS` entry (module, titles, result images in `public/results/`).
 - Icons: Phosphor (MIT) via `src/components/Icon.astro` (`<Icon name="..." />`, bold weight by default), inlined at
   build time. The site mark and `public/favicon.svg` are Phosphor `graph` (bold) in orange.
+- New input image (a `LoadImage` file): copy it into `inputs/` (the export fails without it; it goes into the zip).
+- New node class from a custom node pack: add it to `CUSTOM_NODES` in `src/data/meta.ts` so the setup page and lesson list the pack.
 - New model file: add it to `models.json` (check the URL resolves). The builders put the links into each loader node's
   `properties.models`, so ComfyUI offers to download missing models. The setup page tells users to rely on that, so
   `npm run export` warns while any served workflow lacks the links (rebuild + `publish.py --fetch` before deploying).
