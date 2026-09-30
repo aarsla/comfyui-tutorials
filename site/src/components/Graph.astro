@@ -116,6 +116,9 @@ const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
   .node { position: absolute; display: flex; flex-direction: column; text-align: left; padding: 0; background: var(--node); color: var(--text); border: 1px solid var(--line-2); border-radius: 6px; font: inherit; cursor: pointer; overflow: hidden; }
   .node:hover { border-color: #6b747e; }
   .node[aria-pressed='true'] { border: 2px solid var(--cyan); box-shadow: 0 0 0 4px rgba(79, 216, 232, 0.18); }
+  /* Nodes a "Try this" idea points at (hovered or picked in the lesson panel). */
+  .node.try-hl, .node.try-on { border: 2px solid var(--orange); box-shadow: 0 0 0 5px rgba(240, 106, 42, 0.3); }
+  .graph.try-focus .node:not(.try-hl):not(.try-on) { opacity: 0.35; }
   .title { height: 30px; line-height: 30px; padding: 0 26px 0 10px; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #2d353e; }
   .dot { position: absolute; right: 10px; top: 11px; width: 8px; height: 8px; border-radius: 4px; background: var(--orange); }
   .ports { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; }
@@ -183,6 +186,21 @@ const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
     btn('out').addEventListener('click', () => zoomAt(s / 1.25, ...center()));
     btn('fit').addEventListener('click', fit);
     btn('actual').addEventListener('click', () => zoomAt(1, ...center()));
+
+    // graph:reveal (detail: node ids) zooms to those nodes, up to 100 %.
+    g.addEventListener('graph:reveal', ((e: CustomEvent<string[]>) => {
+      const els = e.detail.map((id) => g.querySelector<HTMLElement>(`.node[data-node="${id}"]`)).filter((el): el is HTMLElement => !!el);
+      if (!els.length) return;
+      const x0 = Math.min(...els.map((el) => el.offsetLeft)), y0 = Math.min(...els.map((el) => el.offsetTop));
+      const x1 = Math.max(...els.map((el) => el.offsetLeft + el.offsetWidth)), y1 = Math.max(...els.map((el) => el.offsetTop + el.offsetHeight));
+      const pad = 48, vw = vp.clientWidth, vh = vp.clientHeight;
+      s = Math.max(MIN, Math.min(1, (vw - pad * 2) / (x1 - x0), (vh - pad * 2) / (y1 - y0)));
+      x = vw / 2 - ((x0 + x1) / 2) * s;
+      y = vh / 2 - ((y0 + y1) / 2) * s;
+      mode = 'free';
+      clamp();
+      draw();
+    }) as EventListener);
 
     // Ctrl/Cmd + wheel (and trackpad pinch, which arrives as ctrl + wheel) zooms at the cursor.
     // A plain wheel scrolls the page; show a hint instead of trapping it.

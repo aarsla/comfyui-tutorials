@@ -74,6 +74,7 @@ const connections = layout.wires.map((w) => {
       <div class="deck-tabs">
         <button type="button" data-show="intro" aria-pressed="true">Briefing</button>
         <button type="button" data-show-selected aria-pressed="false" disabled>Selected</button>
+        {t.tries.length > 0 && <button type="button" data-area-btn="try" aria-pressed="false">Try this <span class="mono badge">{t.tries.length}</span></button>}
         {t.exercise && <button type="button" data-area-btn="conns" aria-pressed="false">Wires <span class="mono badge" data-badge>0/{layout.wires.length}</span></button>}
         <button type="button" class="icon-tab" data-area-btn="result" aria-pressed="false"
           aria-label={t.results.length ? 'Result and files' : 'Files'} title={t.results.length ? 'Result and files' : 'Files'}>
@@ -85,7 +86,7 @@ const connections = layout.wires.map((w) => {
           <Icon name="book-open-text" />
         </button>
         <button type="button" class="collapse" data-collapse aria-expanded="true" aria-label="Hide panel" title="Hide panel">
-          <Icon name="caret-right" />
+          <Icon name="caret-left" />
         </button>
       </div>
       <div class="deck-body" data-deck-body>
@@ -156,6 +157,25 @@ const connections = layout.wires.map((w) => {
           )}
 
         </div>
+        {t.tries.length > 0 && (
+          <div class="area" data-area="try" hidden>
+            <p class="try-lead">Change one thing in ComfyUI, press Run and compare. Point at an idea to see its node in the graph.</p>
+            <ol class="try-list">
+              {t.tries.map((x, i) => (
+                <li>
+                  <button type="button" class="try" data-try={x.nodes.join(',')} aria-pressed="false">
+                    <span class="mono try-n">{i + 1}</span>
+                    <span class="try-body">
+                      <span class="try-text" set:html={x.html} />
+                      <span class="try-nodes mono">{x.nodes.map((id) => nodeById[id]?.title).filter(Boolean).join(' · ')}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         <div class="area" data-area="glossary" hidden>
           <div class="gloss-head">
             <button type="button" class="back" data-back>← Back</button>
@@ -195,7 +215,7 @@ const connections = layout.wires.map((w) => {
       </div>
     </aside>
     <button type="button" class="reopen" data-reopen aria-label="Show panel" title="Show panel" hidden>
-      <Icon name="caret-left" />
+      <Icon name="caret-right" />
       <span>Panel</span>
     </button>
   </section>
@@ -209,8 +229,10 @@ const connections = layout.wires.map((w) => {
 <style>
   .head { display: flex; align-items: flex-end; gap: 32px; padding-top: 28px; padding-bottom: 20px; }
   /* Workbench: graph and panel side by side, together filling the screen; only the panel body scrolls. */
-  .bench { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 16px; height: calc(100dvh - 24px); min-height: 560px; scroll-margin-top: 12px; }
-  .bench.collapsed { grid-template-columns: minmax(0, 1fr) 44px; }
+  .bench { display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 16px; height: calc(100dvh - 24px); min-height: 560px; scroll-margin-top: 12px; }
+  .bench.collapsed { grid-template-columns: 44px minmax(0, 1fr); }
+  /* Panel on the left: the graph moves to the second column. */
+  .bench .deck, .bench .reopen { order: -1; }
   .bench.collapsed .deck { display: none; }
   .bench-graph { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
   .deck { background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -229,6 +251,18 @@ const connections = layout.wires.map((w) => {
   .deck-body { flex: 1; min-height: 0; overflow: auto; }
   .area[data-area='conns'], .area[data-area='result'] { padding: 16px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
   .deck-body .area[hidden] { display: none; }
+  .area[data-area='try'] { padding: 16px 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .try-lead { margin: 0; color: var(--text-2); }
+  .try-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .try { width: 100%; display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text); font: inherit; cursor: pointer; }
+  .try:hover, .try:focus-visible { border-color: var(--orange); }
+  .try:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .try[aria-pressed='true'] { border-color: var(--orange); background: #241a14; }
+  .try-n { flex-shrink: 0; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--orange); color: var(--orange-text); font-size: 12px; }
+  .try-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .try-text { line-height: 1.45; }
+  .try-text :global(code) { font-size: 0.9em; }
+  .try-nodes { font-size: 12px; color: var(--muted); }
   .area[data-area='glossary'] { padding: 12px 22px 24px; }
   .gloss-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; font-size: 14px; }
   .back { background: transparent; border: 0; padding: 6px 0; color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
@@ -343,9 +377,33 @@ const connections = layout.wires.map((w) => {
   const body = detail.querySelector<HTMLElement>('[data-deck-body]')!;
   const selectedBtn = detail.querySelector<HTMLButtonElement>('[data-show-selected]')!;
   const areaBtns = [...detail.querySelectorAll<HTMLButtonElement>('[data-area-btn]')];
+  // Try this: pointing at an idea outlines its nodes; clicking keeps them outlined and brings them into view.
+  const tryBtns = [...detail.querySelectorAll<HTMLButtonElement>('[data-try]')];
+  const markNodes = (ids: string[], cls: string, on: boolean) => {
+    ids.forEach((id) => graph.querySelector(`.node[data-node="${id}"]`)?.classList.toggle(cls, on));
+    graph.classList.toggle('try-focus', !!graph.querySelector('.node.try-hl, .node.try-on'));
+  };
+  const idsOf = (b: HTMLButtonElement) => b.dataset.try!.split(',');
+  function clearTry() {
+    tryBtns.forEach((b) => { b.setAttribute('aria-pressed', 'false'); markNodes(idsOf(b), 'try-on', false); });
+  }
+  tryBtns.forEach((b) => {
+    const on = () => markNodes(idsOf(b), 'try-hl', true), off = () => markNodes(idsOf(b), 'try-hl', false);
+    b.addEventListener('mouseenter', on); b.addEventListener('mouseleave', off);
+    b.addEventListener('focus', on); b.addEventListener('blur', off);
+    b.addEventListener('click', () => {
+      const was = b.getAttribute('aria-pressed') === 'true';
+      clearTry();
+      if (was) return;
+      b.setAttribute('aria-pressed', 'true');
+      markNodes(idsOf(b), 'try-on', true);
+      graph.dispatchEvent(new CustomEvent('graph:reveal', { detail: idsOf(b) }));
+    });
+  });
   let lastSelected = '';
   let prevPressed: HTMLButtonElement = briefing;
   const setArea = (area: string, pressed: HTMLButtonElement) => {
+    if (area !== 'try') clearTry();
     const was = [briefing, selectedBtn, ...areaBtns].find((b) => b.getAttribute('aria-pressed') === 'true');
     if (area === 'glossary' && was && was.dataset.areaBtn !== 'glossary') prevPressed = was;
     detail.querySelectorAll<HTMLElement>('[data-area]').forEach((a) => (a.hidden = a.dataset.area !== area));
