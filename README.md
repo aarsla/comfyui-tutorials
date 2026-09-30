@@ -2,9 +2,22 @@
 
 A graded series of ComfyUI tutorial workflows. Each one is a tested workflow with Markdown note boxes that explain every stage, saved into ComfyUI's Workflows → Tutorials folder. The prompts and input images come from the game [Meridian](https://meridian-gules-eta.vercel.app/): a worn off-white survey ship above the storm clouds of Veyra, off-white and orange robots with cyan eyes, slow-burn horror.
 
-**Website: https://aarsla.github.io/comfyui-tutorials/** lets you follow the course in the browser: an interactive graph for every lesson (click a node or wire to read what it does), a wire-it-yourself exercise, a node index, a glossary and a setup guide with model links.
-
 ![One result per tutorial](images/tutorial_results_gallery.jpg)
+
+## Companion website
+
+**https://aarsla.github.io/comfyui-tutorials/**
+
+Keep it open next to ComfyUI while you work through the tutorials. For each one it has:
+
+- the tutorial's graph, laid out by the same rules as in ComfyUI (stages left to right, no wire behind a node). Click a node or a wire to read what it does and why it connects there.
+- the tutorial's notes in a side panel, with a glossary definition behind every underlined term.
+- the result image and the workflow download. When you open the workflow, ComfyUI offers to download any model you are missing.
+- tutorial 01 as a wiring exercise you can do in the browser, with optional hints.
+
+It also has a setup guide, an index of every node the course uses and the full glossary.
+
+![A lesson on the website: the graph on the left, the selected node's notes on the right](images/site_lesson.jpg)
 
 ## Tutorials
 
@@ -47,7 +60,7 @@ models.json               model files with folder and download URL
 site/                     the website (Astro)
 ```
 
-## Website
+## Working on the website
 
 The site lives in `site/` (Astro) and deploys to GitHub Pages on every push to `main` that touches the site, `tutorials.py`, `models.json` or `workflows/Tutorials/` (`.github/workflows/deploy.yml`).
 
