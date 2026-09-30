@@ -5,7 +5,7 @@ import { TUTORIALS, byModule, lessonUrl, url } from '../lib/tutorials';
 const decks = byModule();
 const first = TUTORIALS[0];
 ---
-<Base title="Learn ComfyUI | Tested tutorial workflows">
+<Base title="Learn ComfyUI | Tested tutorial workflows" fit>
   <section class="hero">
     <div class="hero-text">
       <div class="hazard"></div>
@@ -42,6 +42,16 @@ const first = TUTORIALS[0];
                 <a href={lessonUrl(t)} data-stop={t.n} aria-label={`${t.n} ${t.title}`}>
                   <span class="mono dot">{t.n}</span>
                   <span class="cap">{t.short}</span>
+                  <span class="pop" aria-hidden="true">
+                    {t.results[0]
+                      ? <img src={url(`results/${t.results[0].src}`)} alt="" loading="lazy" width="300" height="300" />
+                      : <span class="pop-ph mono">{t.exercise ? 'Exercise' : 'Comparison'}</span>}
+                    <span class="pop-body">
+                      <span class="mono pop-meta">Mission {t.n} · {t.model}</span>
+                      <span class="pop-title">{t.title}</span>
+                      <span class="pop-desc">{t.desc}</span>
+                    </span>
+                  </span>
                 </a>
               </li>
             ))}
@@ -51,28 +61,6 @@ const first = TUTORIALS[0];
     </ol>
   </section>
 
-  {decks.map((d) => (
-    <section class="deck-sec wrap" id={d.id}>
-      <div class="sec-head">
-        <h2 class="display">Deck {d.deck} · {d.name}</h2>
-        <span>{d.blurb}</span>
-      </div>
-      <div class="cards">
-        {d.lessons.map((t) => (
-          <a class="card" href={lessonUrl(t)} data-card={t.n}>
-            {t.results[0]
-              ? <img src={url(`results/${t.results[0].src}`)} alt="" loading="lazy" width="300" height="300" />
-              : <span class="ph mono">{t.exercise ? 'Exercise: no new image' : 'Comparison lesson'}</span>}
-            <span class="card-body">
-              <span class="mono meta"><span>Mission {t.n} · {t.model}</span><span class="status" data-status></span></span>
-              <span class="card-title">{t.title}</span>
-              <span class="card-desc">{t.desc}</span>
-            </span>
-          </a>
-        ))}
-      </div>
-    </section>
-  ))}
 </Base>
 
 <style>
@@ -131,6 +119,37 @@ const first = TUTORIALS[0];
     .cards { grid-template-columns: minmax(0, 1fr); }
     .dot { width: 36px; height: 36px; font-size: 12px; }
     .deck a::before { top: 17px; }
+  }
+  /* Hover or focus a stop: a card with the lesson's result and description. */
+  .pop { display: none; position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); z-index: 5; width: 240px;
+    background: var(--panel); border: 2px solid #6b7683; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6); text-align: left; pointer-events: none; }
+  /* Keep the cards of the two first and two last stops inside the window. */
+  .deck:first-child li:nth-child(-n+2) .pop { left: 0; transform: none; }
+  .deck:last-child li:nth-last-child(-n+2) .pop { left: auto; right: 0; transform: none; }
+  .deck a:hover .pop, .deck a:focus-visible .pop { display: block; }
+  .pop img, .pop-ph { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+  .pop-ph { display: grid; place-items: center; font-size: 12px; color: var(--muted); background-image: radial-gradient(#2a313a 1px, transparent 1px); background-size: 16px 16px; }
+  .pop-body { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 12px; }
+  .pop-meta { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .pop-title { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.2; color: var(--text); }
+  .pop-desc { font-size: 13px; line-height: 1.35; color: var(--text-2); }
+  @media (hover: none) { .deck a:hover .pop { display: none; } }
+  /* One-window layout (body.fit, see Base): hero takes the height the flight path leaves, type scales with the window. */
+  @media (min-width: 900px) and (min-height: 600px) {
+    .hero { flex: 1; min-height: 0; grid-template-columns: minmax(0, min(46vw, 820px)) minmax(0, 1fr); }
+    .inner { padding: clamp(24px, 5vh, 56px) clamp(32px, 4vw, 56px); gap: clamp(12px, 2.2vh, 22px); }
+    h1 { font-size: clamp(30px, min(3.7vw, 6vh), 76px); }
+    .inner p { font-size: clamp(14px, min(1.2vw, 2.05vh), 21px); max-width: 62ch; }
+    .zip { font-size: clamp(13px, min(1.1vw, 1.9vh), 16px); }
+    .eyebrow { font-size: clamp(11px, 1.6vh, 13px); }
+    .path { padding-top: clamp(14px, 3vh, 40px); padding-bottom: clamp(14px, 3vh, 36px); border-bottom: 0; }
+    .path .sec-head { margin-bottom: clamp(10px, 2vh, 22px); }
+    .path .sec-head h2 { font-size: clamp(20px, 2.8vh, 26px); }
+    .dot { width: clamp(34px, 5vh, 44px); height: clamp(34px, 5vh, 44px); }
+    .deck a::before { top: calc(clamp(34px, 5vh, 44px) / 2 - 1px); }
+    .stops { grid-template-columns: repeat(16, minmax(0, 1fr)); row-gap: 0; }
+    .deck { grid-column: span var(--n); }
+    .deck a .cap { font-size: clamp(11px, 1vw, 13px); }
   }
 </style>
 

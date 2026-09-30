@@ -4,8 +4,8 @@ import '../styles/global.css';
 import TermPopover from '../components/TermPopover.astro';
 import { url } from '../lib/tutorials';
 
-interface Props { title: string; description?: string; progress?: { n: number; of: number } }
-const { title, description = 'Learn ComfyUI with 16 tested workflows, from a seven-node graph to inpainting, ControlNet and image editing.', progress } = Astro.props;
+interface Props { title: string; description?: string; progress?: { n: number; of: number }; fit?: boolean }
+const { title, description = 'Learn ComfyUI with 16 tested workflows, from a seven-node graph to inpainting, ControlNet and image editing.', progress, fit = false } = Astro.props;
 const path = Astro.url.pathname;
 const nav = [
   { href: url('/'), label: 'Missions' },
@@ -26,7 +26,7 @@ const nav = [
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class:list={[{ fit }]}>
   <header class="site-header wrap">
     <a class="brand" href={url('/')}>
       <Icon name="graph" size={30} class="mark" />
@@ -78,5 +78,11 @@ const nav = [
     nav .gh span { display: none; }
     nav .gh { padding-left: 12px; }
     .site-footer { flex-direction: column; }
+  }
+  /* fit: the page is exactly one window tall (home page), on screens big enough for it. */
+  @media (min-width: 900px) and (min-height: 600px) {
+    body.fit { height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+    body.fit main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    body.fit .site-footer { display: none; }
   }
 </style>
