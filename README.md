@@ -2,6 +2,8 @@
 
 A graded series of ComfyUI tutorial workflows. Each one is a tested workflow with Markdown note boxes that explain every stage, saved into ComfyUI's Workflows → Tutorials folder. The prompts and input images come from the game [Meridian](https://meridian-gules-eta.vercel.app/): a worn off-white survey ship above the storm clouds of Veyra, off-white and orange robots with cyan eyes, slow-burn horror.
 
+**Website: https://aarsla.github.io/comfyui-tutorials/** lets you follow the course in the browser: an interactive graph for every lesson (click a node or wire to read what it does), a wire-it-yourself exercise, a node index, a glossary and a setup guide with model links.
+
 ![One result per tutorial](images/tutorial_results_gallery.jpg)
 
 ## Tutorials
@@ -33,13 +35,31 @@ A graded series of ComfyUI tutorial workflows. Each one is a tested workflow wit
 tutorials.py              every tutorial as an API prompt plus its notes (the source of truth)
 comfy.py                  run(prompt): queue an API prompt, wait, return output file paths
 test_tutorials.py [NN..]  run all or selected tutorials through the API, write test_results.json
-publish.py [NN..]         stage tutorials and layout scripts in ComfyUI userdata; --cleanup removes them
+publish.py [NN..]         stage tutorials and layout scripts in ComfyUI userdata; --cleanup removes them,
+                          --fetch copies the built workflows into workflows/Tutorials/
 layout/build_layout.js    in-page builder: stage frames, column layout, wire routing, notes, checks
 layout/build_exercise.js  in-page builder for exercise tutorials (no wires, hint boxes)
 make_samples.py           generate sample input images with Z-Image
 get_loras.py              download and sha256-check the Krea-2 style LoRAs
 images/                   result gallery and sampler shootout sheets
+workflows/Tutorials/      the built workflows, as saved in ComfyUI (served by the site)
+models.json               model files with folder and download URL
+site/                     the website (Astro)
 ```
+
+## Website
+
+The site lives in `site/` (Astro) and deploys to GitHub Pages on every push to `main` that touches the site, `tutorials.py`, `models.json` or `workflows/Tutorials/` (`.github/workflows/deploy.yml`).
+
+```
+cd site
+npm install
+npm run dev      # http://localhost:4321/comfyui-tutorials/
+npm run build    # static site in site/dist
+npm run check    # every lesson graph: no wire behind a node
+```
+
+The build reads `tutorials.py` and `models.json` directly and serves the saved workflows from `workflows/Tutorials/`. After rebuilding the workflows in ComfyUI, run `python publish.py --fetch` so the site serves the new versions.
 
 ## Requirements
 

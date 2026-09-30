@@ -1,0 +1,46 @@
+# Build the Astro site in site/ and publish it to GitHub Pages:
+# https://aarsla.github.io/comfyui-tutorials/
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - tutorials.py
+      - models.json
+      - workflows/Tutorials/**
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # The build exports tutorials.py to JSON first (site/scripts/export.mjs), so it needs Python.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: withastro/action@v6.1.3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
