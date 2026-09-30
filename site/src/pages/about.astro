@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import { TUTORIALS, lessonUrl, url } from '../lib/tutorials';
+---
+<Base title="About | Learn ComfyUI" description="Why these ComfyUI tutorials exist and how they were made.">
+  <section class="head wrap">
+    <h1 class="display">About</h1>
+    <p>I made these lessons while learning ComfyUI for my game.</p>
+  </section>
+
+  <section class="wrap body">
+    <div class="text">
+      <h2 class="display">Why</h2>
+      <p>I'm a solo developer making <a href="https://meridian-gules-eta.vercel.app/">Meridian</a>, a slow-burn sci-fi horror game about a worn survey ship above the storm clouds of the planet Veyra. I wanted to use ComfyUI for concept art and for variants of the game's rooms.</p>
+      <p>I didn't get far. Most tutorials assumed I already knew what a VAE or CFG was, or started from a large finished workflow without explaining its parts.</p>
+
+      <h2 class="display">How</h2>
+      <p>I asked Claude to build me step-by-step lessons instead: one idea per lesson, a note next to every node saying what goes in, what comes out and what each setting does, and a few changes to try after each run. Every workflow was run and its results checked before it went in.</p>
+      <p>The prompts and input images come from the game: the survey ship, the corridor, the medbay, the maintenance robot. So the examples look like the work I actually wanted to do.</p>
+      <p>It turned into {TUTORIALS.length} lessons, from the smallest text-to-image graph in <a href={lessonUrl(TUTORIALS[0])}>00: node basics</a> to inpainting, ControlNet, style transfer and image editing.</p>
+
+      <h2 class="display">This site</h2>
+      <p>I keep it open next to ComfyUI. It shows each lesson's graph in the browser, where you click a node to read what it does, plus a glossary for the jargon and a <a href={url('setup/')}>setup page</a> with the models each lesson needs and one zip of every workflow.</p>
+      <p>I'm sharing all of it in case it helps someone else who is starting out.</p>
+    </div>
+
+    <aside class="facts">
+      <h2 class="display">Credits</h2>
+      <dl>
+        <dt>Game art and prompts</dt>
+        <dd><a href="https://meridian-gules-eta.vercel.app/">Meridian</a></dd>
+        <dt>Lessons and site</dt>
+        <dd>Written with Claude, tested in ComfyUI</dd>
+        <dt>Models</dt>
+        <dd>By their authors, linked on the <a href={url('setup/')}>setup page</a></dd>
+        <dt>Icons</dt>
+        <dd><a href="https://phosphoricons.com/">Phosphor</a> (MIT)</dd>
+        <dt>Source</dt>
+        <dd><a href="https://github.com/aarsla/comfyui-tutorials">GitHub</a></dd>
+      </dl>
+    </aside>
+  </section>
+</Base>
+
+<style>
+  .head { padding-top: 44px; padding-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  h1 { margin: 0; font-size: clamp(34px, 4vw, 52px); }
+  .head p { margin: 0; font-size: 20px; color: var(--text-2); }
+  .body { display: grid; grid-template-columns: minmax(0, 680px) minmax(0, 300px); gap: 64px; align-items: start; padding-bottom: 24px; }
+  .text h2, .facts h2 { margin: 36px 0 12px; font-size: 22px; font-weight: 600; }
+  .text h2:first-child, .facts h2 { margin-top: 0; }
+  .text p { margin: 0 0 16px; font-size: 18px; line-height: 1.65; color: var(--text-2); }
+  .facts { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--orange); padding: 22px 24px; }
+  dl { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+  dt { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  dt:first-child { margin-top: 0; }
+  dd { margin: 0; color: var(--text); }
+  @media (max-width: 900px) {
+    .body { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  }
+</style>
