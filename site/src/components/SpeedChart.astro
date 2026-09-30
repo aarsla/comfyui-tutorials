@@ -1,0 +1,118 @@
+---
+// Seconds per image by model family, measured with ../bench.py (src/data/bench.json),
+// plus a per-lesson table. Warm = the model was already loaded.
+import bench from '../data/bench.json';
+import { TUTORIALS, lessonUrl } from '../lib/tutorials';
+
+type Run = { first?: number; warm?: number[]; samplers: number; error?: string };
+const B = bench as Record<string, { lessons: Record<string, Run>; system: { comfyui_version: string } }>;
+
+// Series order is fixed: the colors follow the machine, not its rank.
+const MACHINES = [
+  { id: 'rtx5070', label: 'RTX 5070 12 GB', detail: 'Windows, i9-14900K, 64 GB RAM', color: '#e8621f' },
+  { id: 'mac-m4', label: 'Mac mini M4', detail: 'macOS, 32 GB unified memory', color: '#23a0b0' },
+].filter((m) => B[m.id]);
+
+// One lesson per model family that shows its per-image cost; images = sampler runs in that lesson.
+const FAMILIES = [
+  { name: 'SDXL', setting: '1024×1024, 30 steps', lesson: '00' },
+  { name: 'Z-Image Turbo', setting: '1216×832, 8 steps', lesson: '03' },
+  { name: 'Krea-2 Turbo', setting: '1024×1024, 8 steps', lesson: '05' },
+  { name: 'Flux.2 Klein 4B', setting: '1024×1024, 4 steps', lesson: '04' },
+  { name: 'Klein edit, 2 reference images', setting: '1360×768, 4 steps', lesson: '13' },
+];
+
+const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const warm = (r?: Run) => (r?.warm?.length ? avg(r.warm) : undefined);
+const perImage = (m: string, nn: string) => {
+  const r = B[m]?.lessons[nn];
+  const w = warm(r);
+  return w === undefined || !r ? undefined : w / Math.max(1, r.samplers);
+};
+const fmt = (s?: number) => (s === undefined ? '' : s < 10 ? s.toFixed(1) + ' s' : s < 120 ? Math.round(s) + ' s' : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, '0')} s`);
+const max = Math.max(1, ...FAMILIES.flatMap((f) => MACHINES.map((m) => perImage(m.id, f.lesson) ?? 0)));
+const version = MACHINES.map((m) => B[m.id].system.comfyui_version).find(Boolean);
+const status = (m: string, nn: string) => {
+  const r = B[m]?.lessons[nn];
+  return !r ? 'not measured yet' : r.error ? (/Float8/.test(r.error) ? 'does not run: fp8 model, not supported on this GPU' : 'does not run') : '';
+};
+---
+{MACHINES.length > 0 && (
+  <div class="speed">
+    <ul class="legend" aria-label="Machines">
+      {MACHINES.map((m) => <li><span class="sw" style={`background:${m.color}`}></span><b>{m.label}</b> <span class="muted">{m.detail}</span></li>)}
+    </ul>
+
+    <div class="chart" role="img" aria-label="Seconds per image for each model on each machine. The table below has the same numbers.">
+      {FAMILIES.map((f) => (
+        <div class="fam">
+          <div class="fam-name"><b>{f.name}</b> <span class="muted mono">{f.setting}</span></div>
+          {MACHINES.map((m) => {
+            const v = perImage(m.id, f.lesson);
+            return (
+              <div class="row" tabindex="0" data-tip={v === undefined ? `${m.label}: ${status(m.id, f.lesson)}` : `${m.label}: ${fmt(v)} per image (lesson ${f.lesson}, warm)`}>
+                {v === undefined
+                  ? <span class="na mono">{status(m.id, f.lesson)}</span>
+                  : <><span class="bar" style={`width:calc((100% - 110px) * ${Math.max(0.006, v / max).toFixed(4)});background:${m.color}`}></span><span class="val mono">{fmt(v)}</span></>}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+    <p class="note muted">Seconds per image with the model already loaded (the second and later runs). ComfyUI {version}. The first run after switching models adds the time to load it; the table has both. Right after starting ComfyUI the model comes from disk, which takes longer: the very first SDXL run took 28 s on the RTX 5070.</p>
+
+    <details class="lessons">
+      <summary>Every lesson, first run and warm</summary>
+      <div class="scroll"><table>
+        <thead>
+          <tr><th>Lesson</th><th>Images</th>{MACHINES.map((m) => <th colspan="2">{m.label}</th>)}</tr>
+          <tr class="sub"><th></th><th></th>{MACHINES.map(() => <><th>First</th><th>Warm</th></>)}</tr>
+        </thead>
+        <tbody>
+          {TUTORIALS.map((t) => (
+            <tr>
+              <td><a href={lessonUrl(t)}>{t.n}</a> {t.title}</td>
+              <td class="num">{Object.values(t.graph).filter((n: any) => ['KSampler', 'SamplerCustomAdvanced'].includes(n.class_type)).length || '-'}</td>
+              {MACHINES.map((m) => {
+                const r = B[m.id].lessons[t.n];
+                return r?.error || !r
+                  ? <td colspan="2" class="na">{status(m.id, t.n)}</td>
+                  : <><td class="num">{fmt(r.first)}</td><td class="num">{r.warm?.length ? fmt(warm(r)) : '-'}</td></>;
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table></div>
+    </details>
+  </div>
+)}
+
+<style>
+  .speed { display: flex; flex-direction: column; gap: 18px; }
+  .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; color: var(--text); }
+  .legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+  .chart { background: var(--panel); border: 1px solid var(--line); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px; }
+  .fam { display: flex; flex-direction: column; gap: 4px; }
+  .fam-name { font-size: 15px; color: var(--text); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .fam-name .mono { font-size: 12px; }
+  .row { position: relative; display: flex; align-items: center; gap: 10px; height: 22px; }
+  .row:focus-visible { outline: 1px solid var(--line-2); }
+  .bar { height: 14px; border-radius: 0 4px 4px 0; flex-shrink: 0; }
+  .val { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .na { font-size: 12px; color: var(--muted); }
+  .row[data-tip]:hover::after, .row[data-tip]:focus-visible::after {
+    content: attr(data-tip); position: absolute; left: 0; bottom: 100%; z-index: 2; white-space: nowrap;
+    background: var(--node); border: 1px solid var(--line-2); color: var(--text); font-size: 13px; padding: 4px 8px;
+  }
+  .note { margin: 0; font-size: 14px; }
+  .lessons summary { cursor: pointer; color: var(--text-2); }
+  .lessons .scroll { overflow-x: auto; margin-top: 12px; }
+  .lessons table { width: auto; }
+  .lessons th, .lessons td { padding: 5px 20px 5px 0; vertical-align: baseline; }
+  .lessons th { text-align: left; font-weight: 600; white-space: nowrap; }
+  .lessons .sub th, .lessons .num { text-align: right; }
+  .lessons .sub th { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .lessons .num { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  .lessons td.na { color: var(--muted); font-size: 13px; }
+</style>

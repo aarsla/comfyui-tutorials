@@ -11,6 +11,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { crc32, deflateRawSync } from 'node:zlib';
+import { readdirSync } from 'node:fs';
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = join(site, '..');
@@ -20,6 +21,14 @@ execFileSync(py, [join(repo, 'tutorials.py'), out], { stdio: 'inherit' });
 copyFileSync(join(repo, 'models.json'), join(site, 'src/data/models.json'));
 
 const T = JSON.parse(readFileSync(out, 'utf8'));
+
+// Benchmarks from ../bench.py: one JSON per machine -> src/data/bench.json.
+const benchDir = join(repo, 'bench');
+const bench = existsSync(benchDir)
+  ? Object.fromEntries(readdirSync(benchDir).filter((f) => f.endsWith('.json'))
+    .map((f) => { const b = JSON.parse(readFileSync(join(benchDir, f), 'utf8')); return [b.name, b]; }))
+  : {};
+writeFileSync(join(site, 'src/data/bench.json'), JSON.stringify(bench));
 const dir = join(site, 'public/workflows');
 mkdirSync(dir, { recursive: true });
 let saved = 0;

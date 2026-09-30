@@ -11,6 +11,7 @@ on:
       - models.json
       - workflows/Tutorials/**
       - inputs/**
+      - bench/**
       - .github/workflows/deploy.yml
   workflow_dispatch:
 

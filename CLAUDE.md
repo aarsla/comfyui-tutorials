@@ -37,6 +37,8 @@ tutorials.py              # THE source of truth: every tutorial = API prompt + n
 models.json               # every model file: folder + verified Hugging Face URL (rename: published under another name)
 comfy.py                  # run(prompt) -> queue an API prompt, wait, return output file paths
 test_tutorials.py [NN..]  # run every (or selected) tutorial through the API; writes test_results.json
+bench.py --base URL --name NAME [NN..]  # time each tutorial (first run + warm) on one server -> bench/NAME.json;
+                          #   the setup page chart reads bench/*.json (machines listed in site/src/components/SpeedChart.astro)
 publish.py [NN..]         # stage tutorials + models + layout scripts into ComfyUI userdata (tmp_*); --cleanup removes them;
                           #   --fetch copies the built workflows into workflows/Tutorials/ for the site
 layout/build_layout.js    # in-page builder: stage frames, column layout, orthogonal wire routing, notes, checks

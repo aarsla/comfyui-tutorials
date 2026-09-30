@@ -5,6 +5,7 @@ import Base from '../layouts/Base.astro';
 import { HOWTO_MD, TUTORIALS, lessonUrl, url } from '../lib/tutorials';
 import { MODEL_FILES, packsFor } from '../data/meta';
 import { linkTerms } from '../lib/terms';
+import SpeedChart from '../components/SpeedChart.astro';
 
 // Matched sets: a model, its text encoder (with the CLIPLoader type) and its VAE belong together.
 const FAMILIES: { name: string; note: string; files: string[] }[] = [
@@ -19,7 +20,7 @@ const FAMILIES: { name: string; note: string; files: string[] }[] = [
     'qwen_3_4b.safetensors',
     'ae.safetensors',
   ] },
-  { name: 'Krea-2 Turbo', note: 'Load CLIP with type krea2. Sampler euler, scheduler simple, 8 steps, CFG 1.', files: [
+  { name: 'Krea-2 Turbo', note: 'Load CLIP with type krea2. Sampler euler, scheduler simple, 8 steps, CFG 1. Does not run on Apple silicon Macs: the model file is fp8, which the Mac GPU backend does not support.', files: [
     'krea2_turbo_fp8_scaled.safetensors',
     'qwen3vl_4b_fp8_scaled.safetensors',
     'qwen_image_vae.safetensors',
@@ -67,6 +68,11 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
       <h2 class="display">Download missing models</h2>
       <p>If the workflow needs a model you don't have, ComfyUI lists it and offers to download it into the right folder. Click Download, wait for it to finish, then press Run.</p>
     </article>
+  </section>
+
+  <section class="wrap speed-sec">
+    <div class="sec-head"><h2 class="display">How long it takes</h2><span>Measured with the lesson workflows as downloaded.</span></div>
+    <SpeedChart />
   </section>
 
   <section class="wrap custom">
@@ -141,6 +147,7 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
   .step .n { font-size: 12px; color: var(--orange-text); letter-spacing: 0.1em; }
   .step h2 { margin: 0; font-size: 22px; }
   .step p { margin: 0; color: var(--text-2); }
+  .speed-sec { padding-bottom: 48px; }
   .custom { padding-bottom: 40px; }
   .custom p { margin: 0; color: var(--text-2); max-width: 900px; }
   .step .zip { align-self: flex-start; margin: 4px 0; }

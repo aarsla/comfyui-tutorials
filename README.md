@@ -50,6 +50,7 @@ To get every workflow and input image at once, download [comfyui-tutorials.zip](
 tutorials.py              every tutorial as an API prompt plus its notes (the source of truth)
 comfy.py                  run(prompt): queue an API prompt, wait, return output file paths
 test_tutorials.py [NN..]  run all or selected tutorials through the API, write test_results.json
+bench.py --base URL --name NAME [NN..]  time every tutorial on one ComfyUI server, write bench/NAME.json (setup page chart)
 publish.py [NN..]         stage tutorials and layout scripts in ComfyUI userdata; --cleanup removes them,
                           --fetch copies the built workflows into workflows/Tutorials/
 layout/build_layout.js    in-page builder: stage frames, column layout, wire routing, notes, checks

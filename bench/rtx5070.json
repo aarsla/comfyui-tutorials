@@ -1,0 +1,141 @@
+{
+ "name": "rtx5070",
+ "system": {
+  "os": "win32",
+  "ram_total": 68542652416,
+  "comfyui_version": "0.38.0",
+  "python_version": "3.13.12 (main, Feb 12 2026, 00:38:53) [MSC v.1944 64 bit (AMD64)]",
+  "pytorch_version": "2.12.1+cu130"
+ },
+ "devices": [
+  {
+   "name": "cuda:0 NVIDIA GeForce RTX 5070 : cudaMallocAsync",
+   "type": "cuda",
+   "vram_total": 12792037376
+  }
+ ],
+ "lessons": {
+  "00": {
+   "first": 12.4,
+   "warm": [
+    11.0,
+    11.0
+   ],
+   "samplers": 1
+  },
+  "01": {
+   "first": 12.5,
+   "warm": [
+    11.1,
+    11.2
+   ],
+   "samplers": 1
+  },
+  "02": {
+   "first": 25.6,
+   "warm": [
+    23.8,
+    24.0
+   ],
+   "samplers": 3
+  },
+  "03": {
+   "first": 22.3,
+   "warm": [
+    8.0,
+    8.0
+   ],
+   "samplers": 1
+  },
+  "04": {
+   "first": 7.1,
+   "warm": [
+    3.0,
+    2.9
+   ],
+   "samplers": 1
+  },
+  "05": {
+   "first": 61.3,
+   "warm": [
+    51.6,
+    51.6
+   ],
+   "samplers": 4
+  },
+  "06": {
+   "first": 58.2,
+   "warm": [
+    57.0,
+    57.0
+   ],
+   "samplers": 4
+  },
+  "07": {
+   "first": 40.4,
+   "warm": [
+    38.7,
+    38.7
+   ],
+   "samplers": 3
+  },
+  "08": {
+   "first": 15.3,
+   "warm": [
+    11.3,
+    11.4
+   ],
+   "samplers": 1
+  },
+  "09": {
+   "first": 7.5,
+   "warm": [],
+   "samplers": 0
+  },
+  "10": {
+   "first": 1.1,
+   "warm": [],
+   "samplers": 0
+  },
+  "11": {
+   "first": 18.0,
+   "warm": [
+    13.8,
+    14.0
+   ],
+   "samplers": 1
+  },
+  "12": {
+   "first": 29.3,
+   "warm": [
+    23.3,
+    23.4
+   ],
+   "samplers": 2
+  },
+  "13": {
+   "first": 12.0,
+   "warm": [
+    9.3,
+    9.3
+   ],
+   "samplers": 1
+  },
+  "14": {
+   "first": 69.5,
+   "warm": [
+    67.6,
+    67.9
+   ],
+   "samplers": 7
+  },
+  "15": {
+   "first": 68.1,
+   "warm": [
+    66.4,
+    66.4
+   ],
+   "samplers": 5
+  }
+ }
+}
