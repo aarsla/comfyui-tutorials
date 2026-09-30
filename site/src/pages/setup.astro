@@ -70,11 +70,6 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
     </article>
   </section>
 
-  <section class="wrap speed-sec">
-    <div class="sec-head"><h2 class="display">How long it takes</h2><span>Measured with the lesson workflows as downloaded.</span></div>
-    <SpeedChart />
-  </section>
-
   <section class="wrap custom">
     <div class="sec-head"><h2 class="display">Custom nodes</h2><span>Everything else is built into ComfyUI.</span></div>
     {packs.map((p) => (
@@ -136,6 +131,11 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
       <div class="prose" set:html={howto} />
     </div>
   </section>
+
+  <section class="wrap speed-sec">
+    <div class="sec-head"><h2 class="display">How long it takes</h2><span>Measured with the lesson workflows as downloaded.</span></div>
+    <SpeedChart />
+  </section>
 </Base>
 
 <style>
@@ -147,7 +147,7 @@ const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
   .step .n { font-size: 12px; color: var(--orange-text); letter-spacing: 0.1em; }
   .step h2 { margin: 0; font-size: 22px; }
   .step p { margin: 0; color: var(--text-2); }
-  .speed-sec { padding-bottom: 48px; }
+  .speed-sec { padding-top: 24px; padding-bottom: 48px; }
   .custom { padding-bottom: 40px; }
   .custom p { margin: 0; color: var(--text-2); max-width: 900px; }
   .step .zip { align-self: flex-start; margin: 4px 0; }
