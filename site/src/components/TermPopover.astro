@@ -1,0 +1,106 @@
+---
+// One shared popover for every [data-term] trigger on the page: hover, focus or tap shows the
+// glossary's short definition and a link to the full entry.
+import { TERMS } from '../data/glossary';
+import { url } from '../lib/tutorials';
+
+const data = Object.fromEntries(TERMS.map((t) => [t.id, { term: t.term, short: t.short }]));
+---
+<div class="term-pop" id="term-pop" role="dialog" aria-modal="false" aria-labelledby="term-pop-title" hidden>
+  <div class="term-pop-title" id="term-pop-title"></div>
+  <p class="term-pop-body"></p>
+  <a class="term-pop-link" href="#">Read more in the glossary →</a>
+</div>
+<script type="application/json" id="glossary-data" set:html={JSON.stringify({ base: url('glossary/'), terms: data })}></script>
+
+<style is:global>
+  .term { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: help; text-decoration: underline dotted color-mix(in srgb, var(--cyan) 70%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  .term:hover, .term[aria-expanded='true'] { color: var(--cyan); }
+  .term-wrap { white-space: nowrap; }
+  button.tchip[data-term] { font: inherit; font-family: var(--mono); font-size: 12px; cursor: help; }
+  button.tchip[data-term]:hover, button.tchip[data-term][aria-expanded='true'] { box-shadow: 0 0 0 1px var(--c, var(--cyan)); }
+  .term-pop { position: absolute; z-index: 50; width: min(340px, calc(100vw - 32px)); background: #0c1014; border: 1px solid var(--line-2); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); padding: 14px 16px; }
+  .term-pop[hidden] { display: none; }
+  .term-pop-title { font-family: var(--display); font-weight: 700; font-size: 17px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text); }
+  .term-pop-body { margin: 6px 0 10px; font-size: 15px; line-height: 1.5; color: var(--text-2); }
+  .term-pop-link { font-size: 14px; }
+</style>
+
+<script>
+  const pop = document.getElementById('term-pop')!;
+  const title = pop.querySelector<HTMLElement>('.term-pop-title')!;
+  const body = pop.querySelector<HTMLElement>('.term-pop-body')!;
+  const link = pop.querySelector<HTMLAnchorElement>('.term-pop-link')!;
+  const { base, terms } = JSON.parse(document.getElementById('glossary-data')!.textContent!) as {
+    base: string; terms: Record<string, { term: string; short: string }>;
+  };
+  let owner: HTMLElement | null = null;
+  let pinned = false;
+  let openTimer = 0, closeTimer = 0;
+
+  const place = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    pop.style.left = '0px';
+    pop.style.top = '0px';
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    const left = Math.min(Math.max(8, r.left), innerWidth - w - 8) + scrollX;
+    const below = r.bottom + 8 + h < innerHeight || r.top - 8 - h < 0;
+    pop.style.left = `${left}px`;
+    pop.style.top = `${(below ? r.bottom + 8 : r.top - 8 - h) + scrollY}px`;
+  };
+  const open = (el: HTMLElement, pin = false) => {
+    const t = terms[el.dataset.term!];
+    if (!t) return;
+    clearTimeout(closeTimer);
+    if (owner && owner !== el) owner.setAttribute('aria-expanded', 'false');
+    owner = el;
+    pinned = pin;
+    title.textContent = t.term;
+    body.textContent = t.short;
+    link.href = `${base}#${el.dataset.term}`;
+    pop.hidden = false;
+    el.setAttribute('aria-expanded', 'true');
+    el.setAttribute('aria-controls', 'term-pop');
+    place(el);
+  };
+  const close = () => {
+    clearTimeout(openTimer);
+    pop.hidden = true;
+    owner?.setAttribute('aria-expanded', 'false');
+    owner = null;
+    pinned = false;
+  };
+  const later = () => { clearTimeout(closeTimer); closeTimer = window.setTimeout(() => { if (!pinned) close(); }, 220); };
+  const trigger = (e: Event) => (e.target as Element | null)?.closest?.<HTMLElement>('[data-term]') ?? null;
+
+  document.addEventListener('pointerover', (e) => {
+    if ((e as PointerEvent).pointerType !== 'mouse') return;
+    const el = trigger(e);
+    if (el) { clearTimeout(openTimer); openTimer = window.setTimeout(() => open(el), 150); }
+    else if ((e.target as Element).closest('#term-pop')) clearTimeout(closeTimer);
+  });
+  document.addEventListener('pointerout', (e) => {
+    if ((e as PointerEvent).pointerType !== 'mouse') return;
+    if (trigger(e) || (e.target as Element).closest('#term-pop')) { clearTimeout(openTimer); later(); }
+  });
+  // A page with an in-place glossary (the lesson side panel) can take over "Read more" by cancelling this event.
+  link.addEventListener('click', (e) => {
+    const id = link.hash.slice(1);
+    const open = new CustomEvent('glossary:open', { detail: id, cancelable: true });
+    if (!document.dispatchEvent(open)) { e.preventDefault(); close(); }
+  });
+  document.addEventListener('click', (e) => {
+    const el = trigger(e);
+    if (el) { e.preventDefault(); if (owner === el && pinned) close(); else open(el, true); return; }
+    if (!(e.target as Element).closest('#term-pop')) close();
+  });
+  document.addEventListener('focusin', (e) => {
+    const el = trigger(e);
+    if (el) open(el);
+    else if (!(e.target as Element).closest('#term-pop') && !pinned) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && owner) { const el = owner; close(); el.focus(); }
+  });
+  addEventListener('resize', () => owner && place(owner));
+</script>

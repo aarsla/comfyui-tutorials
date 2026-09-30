@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import GlossaryList from '../components/GlossaryList.astro';
+---
+<Base title="Glossary | Learn ComfyUI" description="The ComfyUI and image-generation terms used in the course, in plain words.">
+  <section class="head wrap">
+    <div class="eyebrow">Reference</div>
+    <h1 class="display">Glossary</h1>
+    <p>The words the lessons use, in plain terms. Underlined words in the lessons open these definitions.</p>
+  </section>
+  <section class="wrap">
+    <GlossaryList full />
+  </section>
+</Base>
+
+<style>
+  .head { padding-top: 44px; padding-bottom: 24px; display: flex; flex-direction: column; gap: 10px; }
+  h1 { margin: 0; font-size: clamp(34px, 4vw, 52px); }
+  .head p { margin: 0; font-size: 19px; color: var(--text-2); }
+</style>

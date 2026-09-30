@@ -1,0 +1,529 @@
+---
+import Icon from '../../components/Icon.astro';
+import Base from '../../layouts/Base.astro';
+import Graph from '../../components/Graph.astro';
+import { TUTORIALS, lessonUrl, url, type Tutorial } from '../../lib/tutorials';
+import { layoutGraph } from '../../lib/graph';
+import { MODEL_FILES, MODULES, NODE_INFO, STAGES } from '../../data/meta';
+import { explainWire } from '../../data/wires';
+import TypeChip from '../../components/TypeChip.astro';
+import { linkTerms } from '../../lib/terms';
+import GlossaryList from '../../components/GlossaryList.astro';
+
+export function getStaticPaths() {
+  return TUTORIALS.map((t) => ({ params: { slug: t.slug }, props: { t } }));
+}
+
+const { t } = Astro.props as { t: Tutorial };
+const layout = layoutGraph(t.graph);
+const mod = MODULES.find((m) => m.id === t.module)!;
+const prev = TUTORIALS[t.index - 1];
+const next = TUTORIALS[t.index + 1];
+const noted = new Set([...t.nodeNotes.map((n) => n.anchor), ...Object.keys(t.hints)]);
+const notesFor = (id: string) => t.nodeNotes.filter((n) => n.anchor === id);
+const workflowHref = url(`workflows/${encodeURIComponent(t.file)}`);
+const nodeById = Object.fromEntries(layout.nodes.map((n) => [n.id, n]));
+const connections = layout.wires.map((w) => {
+  const src = nodeById[w.src], dst = nodeById[w.dst];
+  const out = src.outs[w.sslot].name, input = dst.ins[w.dslot].name;
+  return { w, src, dst, out, input, why: explainWire(src.cls, out, dst.cls, input, w.type) };
+});
+---
+<Base title={`${t.n} · ${t.title} | Learn ComfyUI`} description={t.desc} progress={{ n: t.index, of: TUTORIALS.length - 1 }}>
+  <section class="head wrap" data-lesson={t.n}>
+    <div class="head-text">
+      <div class="tags">
+        {t.exercise && <span class="exercise mono">EXERCISE</span>}
+        <span class="eyebrow">Deck {mod.deck} · {mod.name} · {t.model}</span>
+      </div>
+      <h1 class="display">{t.n} · {t.title}</h1>
+      <p>{t.exercise ? 'The nodes from mission 00 with every connection removed. Drag from an output dot to the matching input to rebuild the graph here, then do the same in ComfyUI. Stuck? Reveal one wire at a time.' : `${t.desc} Click any node to read what it does.`}</p>
+    </div>
+    <a class="btn btn-primary" href={workflowHref} download={t.file}>
+      <Icon name="download-simple" />
+      Download workflow
+    </a>
+  </section>
+
+  <section class="bench wrap" data-bench>
+    <div class="bench-graph">
+      <Graph layout={layout} noted={noted} wiring={t.exercise} fill>
+        {t.exercise && (
+          <button slot="tools" type="button" class="hints-switch" role="switch" aria-checked="false" data-hints
+            title="Show where the selected node's wires go, and wiring hints in the panel">
+            <span class="track" aria-hidden="true"><span class="knob"></span></span>
+            Hints
+          </button>
+        )}
+        {t.exercise && (
+          <span slot="start" class="reset-wrap" data-reset-wrap hidden>
+            <button type="button" class="reset-btn" data-reset-ask aria-label="Clear the wires you connected" title="Clear the wires you connected">
+              <Icon name="arrow-counter-clockwise" />
+            </button>
+            <span class="reset-confirm" data-reset-confirm hidden role="group" aria-label="Confirm reset">
+              <span class="mono" data-reset-text>Clear wires?</span>
+              <button type="button" data-reset-yes>Yes</button>
+              <button type="button" data-reset-no>No</button>
+            </span>
+          </span>
+        )}
+      </Graph>
+    </div>
+    <aside class="deck" data-detail aria-label="Lesson panel">
+      <div class:list={['hazard', { yellow: t.exercise }]}></div>
+      <div class="deck-tabs">
+        <button type="button" data-show="intro" aria-pressed="true">Briefing</button>
+        <button type="button" data-show-selected aria-pressed="false" disabled>Selected</button>
+        {t.exercise && <button type="button" data-area-btn="conns" aria-pressed="false">Wires <span class="mono badge" data-badge>0/{layout.wires.length}</span></button>}
+        <button type="button" class="icon-tab" data-area-btn="result" aria-pressed="false"
+          aria-label={t.results.length ? 'Result and files' : 'Files'} title={t.results.length ? 'Result and files' : 'Files'}>
+          {t.results.length
+            ? <Icon name="image" />
+            : <Icon name="file-text" />}
+        </button>
+        <button type="button" class="icon-tab" data-area-btn="glossary" aria-pressed="false" aria-label="Glossary" title="Glossary">
+          <Icon name="book-open-text" />
+        </button>
+        <button type="button" class="collapse" data-collapse aria-expanded="true" aria-label="Hide panel" title="Hide panel">
+          <Icon name="caret-right" />
+        </button>
+      </div>
+      <div class="deck-body" data-deck-body>
+        <div class="area" data-area="notes">
+          {t.intro && (
+            <article class="panel" data-panel="intro">
+              <div class="prose" set:html={linkTerms(t.intro.html)} />
+            </article>
+          )}
+
+          {layout.nodes.map((n) => (
+            <article class="panel" data-panel={n.id}>
+              <div class="eyebrow">Stage {n.stage + 1} · {STAGES[n.stage]}</div>
+              <h2 class="node-title">{n.title}</h2>
+              <div class="io">
+                <span class="lbl">In</span>
+                {n.ins.length ? n.ins.map((p) => <TypeChip type={p.type} label={p.name} />) : <span class="tchip">none</span>}
+                <span class="lbl">Out</span>
+                {n.outs.length ? n.outs.map((p) => <TypeChip type={p.type} label={p.name} />) : <span class="tchip">none</span>}
+              </div>
+              <p class="info"><span class="mono cls">{n.cls}</span> <span set:html={linkTerms(NODE_INFO[n.cls] ?? '')} /></p>
+              {t.hints[n.id] && (
+                <>
+                  <div class="callout yellow hint-on"><div class="mono k">WIRING HINT</div><div class="prose" set:html={linkTerms(t.hints[n.id])} /></div>
+                  <p class="hint-off">Wiring hints are off. Turn on <strong>Hints</strong> in the graph toolbar to see where this node's wires go.</p>
+                </>
+              )}
+              {notesFor(n.id).map((note) => (
+                <div class="note">
+                  <h3 class="display">{note.title}</h3>
+                  <div class="prose" set:html={linkTerms(note.html)} />
+                </div>
+              ))}
+            </article>
+          ))}
+
+          {connections.map((c) => (
+            <article class="panel" data-panel={`wire:${c.w.id}`}>
+              <div class="eyebrow">Connection · {c.w.type}</div>
+              <h2 class="node-title">{c.src.title} <span class="port-name">{c.out}</span> → {c.dst.title} <span class="port-name">{c.input}</span></h2>
+              <div class="io"><TypeChip type={c.w.type} /></div>
+              <p class="why" set:html={linkTerms(c.why)} />
+              <p class="info">Click <strong>{c.src.title}</strong> or <strong>{c.dst.title}</strong> in the graph to read about either end.</p>
+            </article>
+          ))}
+        </div>
+        <div class="area" data-area="conns" hidden>
+          {t.exercise && (
+            <div class="box" data-reveal>
+              <div class="box-head">
+                <h2 class="display">Connections</h2>
+                <span class="mono count"><span data-count>0</span> of {layout.wires.length} connected</span>
+              </div>
+              <ol class="conns">
+                {layout.wires.map((w) => (
+                  <li data-row={w.id}>
+                    <span class="swatch" style={`background:${w.color}`}></span>
+                    <span class="what">{w.label}</span>
+                    <span class="mono done">Connected</span>
+                    <button type="button" data-reveal-wire={w.id} aria-pressed="false">Reveal</button>
+                  </li>
+                ))}
+              </ol>
+              <p class="win" data-win hidden>All {layout.wires.length} connected. Now wire it the same way in ComfyUI and press Run.</p>
+              <button type="button" class="btn btn-ghost all" data-reveal-all>Reveal all</button>
+              <p class="saved-note">Wires you connect are saved in this browser. The reset button in the graph toolbar clears them.</p>
+            </div>
+          )}
+
+        </div>
+        <div class="area" data-area="glossary" hidden>
+          <div class="gloss-head">
+            <button type="button" class="back" data-back>← Back</button>
+            <a href={url('glossary/')}>Open the glossary page</a>
+          </div>
+          <GlossaryList />
+        </div>
+        <div class="area" data-area="result" hidden>
+          {t.results.length > 0 && (
+            <figure class="results">
+              {t.results.map((r, i) => (
+                <div class:list={['result', { big: i === 0 }]}>
+                  <img src={url(`results/${r.src}`)} alt={r.caption} loading="lazy" width="300" height="300" />
+                  <figcaption class="mono">{r.caption}</figcaption>
+                </div>
+              ))}
+            </figure>
+          )}
+
+          <div class="box">
+            <div class="eyebrow">You need</div>
+            <ul class="needs">
+              {t.models.map((m) => (
+                <li>
+                  {MODEL_FILES[m] ? <a href={MODEL_FILES[m].url}><code>{m}</code></a> : <code>{m}</code>}
+                  <span class="muted"> in models/{MODEL_FILES[m]?.folder ?? '?'}{MODEL_FILES[m]?.rename ? ', rename after download' : ''}</span>
+                </li>
+              ))}
+              {t.images.map((m) => <li><code>{m}</code> <span class="muted">in the input folder</span></li>)}
+            </ul>
+            <p class="auto">Missing a model? ComfyUI offers to download it when you open the workflow.</p>
+            <a href={url('setup/')}>Where do these files go?</a>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+    <button type="button" class="reopen" data-reopen aria-label="Show panel" title="Show panel" hidden>
+      <Icon name="caret-left" />
+      <span>Panel</span>
+    </button>
+  </section>
+
+  <nav class="pager wrap" aria-label="Lessons">
+    {prev ? <a class="prev" href={lessonUrl(prev)}>← {prev.n} {prev.title}</a> : <span></span>}
+    {next && <a class="btn btn-ghost" href={lessonUrl(next)}><span>Next: {next.n} {next.title}</span><span aria-hidden="true">→</span></a>}
+  </nav>
+</Base>
+
+<style>
+  .head { display: flex; align-items: flex-end; gap: 32px; padding-top: 28px; padding-bottom: 20px; }
+  /* Workbench: graph and panel side by side, together filling the screen; only the panel body scrolls. */
+  .bench { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 16px; height: calc(100dvh - 24px); min-height: 560px; scroll-margin-top: 12px; }
+  .bench.collapsed { grid-template-columns: minmax(0, 1fr) 44px; }
+  .bench.collapsed .deck { display: none; }
+  .bench-graph { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .deck { background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .deck .hazard { height: 8px; flex-shrink: 0; }
+  .deck-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px 12px 4px; }
+  .hints-switch { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .hints-switch:hover { color: var(--text); }
+  .hints-switch .track { width: 30px; height: 16px; border-radius: 8px; background: #2a323b; position: relative; transition: background 0.15s; }
+  .hints-switch .knob { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 6px; background: var(--muted); transition: transform 0.15s, background 0.15s; }
+  .hints-switch[aria-checked='true'] { color: var(--text); border-color: var(--yellow); }
+  .hints-switch[aria-checked='true'] .track { background: color-mix(in srgb, var(--yellow) 45%, transparent); }
+  .hints-switch[aria-checked='true'] .knob { transform: translateX(14px); background: var(--yellow); }
+  .deck-tabs button:disabled { opacity: 0.4; cursor: default; }
+  .badge { font-size: 11px; margin-left: 4px; opacity: 0.8; }
+  .deck-tabs .collapse { margin-left: auto; width: 36px; padding: 0; display: grid; place-items: center; }
+  .deck-body { flex: 1; min-height: 0; overflow: auto; }
+  .area[data-area='conns'], .area[data-area='result'] { padding: 16px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .deck-body .area[hidden] { display: none; }
+  .area[data-area='glossary'] { padding: 12px 22px 24px; }
+  .gloss-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; font-size: 14px; }
+  .back { background: transparent; border: 0; padding: 6px 0; color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+  .back:hover { color: var(--text); }
+  .deck-tabs .icon-tab { width: 36px; padding: 0; display: grid; place-items: center; }
+  .reopen { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; background: var(--panel); border: 1px solid var(--line); color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+  .reopen span { writing-mode: vertical-rl; }
+  .reopen:hover { color: var(--text); border-color: var(--line-2); }
+  .reopen[hidden] { display: none; }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 20px; }
+  .head-text { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .tags { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .exercise { font-size: 12px; letter-spacing: 0.1em; color: var(--bg); background: var(--yellow); padding: 3px 8px; }
+  h1 { margin: 0; font-size: clamp(32px, 4vw, 48px); line-height: 1.05; }
+  .head p { margin: 0; font-size: 18px; color: var(--text-2); max-width: 900px; }
+  .deck-tabs button { height: 36px; padding: 0 9px; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+  .deck-tabs button[aria-pressed='true'] { background: var(--hull); color: var(--bg); border-color: var(--hull); }
+  .panel { padding: 18px 22px 28px; display: flex; flex-direction: column; gap: 14px; }
+  :global(html.js) .panel:not(.on) { display: none; }
+  :global(html:not(.js)) .panel + .panel { border-top: 1px solid var(--line); }
+  .node-title { margin: 0; font-family: var(--display); font-size: 26px; line-height: 1.15; font-weight: 700; }
+  .io { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .lbl { font-size: 14px; color: var(--muted); }
+  .lbl + .tchip { margin-left: 2px; }
+  .tchip + .lbl { margin-left: 14px; }
+  .tchip { font-family: var(--mono); font-size: 12px; padding: 3px 10px; border: 1px solid var(--c, #6b747e); color: var(--c, #9aa3ad); background: color-mix(in srgb, var(--c, #6b747e) 12%, transparent); }
+  .info { margin: 0; color: var(--text-2); }
+  .why { margin: 0; font-size: 18px; line-height: 1.55; color: var(--text); max-width: 760px; }
+  .port-name { font-family: var(--mono); font-size: 0.6em; font-weight: 500; color: var(--muted); }
+  .cls { font-size: 13px; color: var(--muted); margin-right: 6px; }
+  .note { border-top: 1px solid var(--line); padding-top: 16px; }
+  .note h3 { margin: 0 0 10px; font-size: 20px; }
+  .hint-off { margin: 0; font-size: 15px; color: var(--muted); }
+  :global(html:not(.hints)) .hint-on, :global(html.hints) .hint-off { display: none; }
+  .callout { background: #231f0e; border: 1px solid #5a4a10; padding: 14px 18px; }
+  .callout .k { font-size: 12px; letter-spacing: 0.1em; color: var(--yellow); margin-bottom: 6px; }
+  .results { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .result.big { grid-column: 1 / -1; }
+  .result img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .result figcaption { font-size: 12px; color: var(--muted); padding-top: 6px; }
+  .box { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .needs { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .needs code { word-break: break-all; }
+  .needs a code { color: var(--orange-text); }
+  .needs a:hover code { color: #ff9a62; }
+  .muted { color: var(--muted); }
+  .auto { margin: 0; font-size: 14px; color: var(--text-2); }
+  .pager .btn { justify-content: space-between; }
+  .prev { color: var(--muted); font-size: 15px; }
+  .box-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .box-head h2 { margin: 0; font-size: 22px; }
+  .count { font-size: 12px; color: var(--muted); }
+  .conns { margin: 0; padding: 0; list-style: none; }
+  .conns li { display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: 1px solid var(--line); font-size: 14px; }
+  .swatch { width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+  .what { flex: 1; }
+  .conns button { min-width: 76px; height: 36px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font: 600 12px var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+  .conns button[aria-pressed='true'] { background: #2a323b; border-color: #2a323b; color: var(--muted); }
+  .done { display: none; font-size: 12px; color: #9fdca5; }
+  .conns li.made .done { display: inline; }
+  .conns li.made button { display: none; }
+  .conns li.made .what { color: var(--muted); }
+  .win { margin: 0; padding: 12px 14px; border: 1px solid #5bae63; color: #9fdca5; font-size: 15px; }
+  .all { justify-content: center; }
+  .reset-wrap { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .reset-wrap[hidden], .reset-confirm[hidden], .reset-btn[hidden] { display: none; }
+  .reset-btn { width: 36px; height: 36px; display: grid; place-items: center; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); cursor: pointer; }
+  .reset-btn:hover { color: var(--text); border-color: var(--hull); }
+  .reset-confirm { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); white-space: nowrap; }
+  .reset-confirm button { height: 32px; padding: 0 10px; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); font: 600 12px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+  .reset-confirm [data-reset-yes] { border-color: #e05555; color: #f2a0a0; }
+  .reset-confirm [data-reset-yes]:hover { background: #e05555; color: var(--bg); }
+  .saved-note { margin: 0; font-size: 13px; color: var(--muted); }
+  @media (max-width: 1099px) {
+    .bench, .bench.collapsed { display: block; height: auto; min-height: 0; }
+    .bench.collapsed .deck { display: flex; }
+    .deck { margin-top: 16px; }
+    .deck-body { overflow: visible; }
+    .collapse, .reopen { display: none !important; }
+    .pager { flex-direction: column-reverse; align-items: stretch; }
+  }
+  @media (max-width: 1000px) {
+    .head { flex-direction: column; align-items: stretch; }
+    .head .btn { align-self: flex-start; }
+  }
+</style>
+
+<script>
+  document.documentElement.classList.add('js');
+  try {
+    const n = document.querySelector<HTMLElement>('[data-lesson]')!.dataset.lesson!;
+    const seen: string[] = JSON.parse(localStorage.getItem('seen-lessons') || '[]');
+    if (!seen.includes(n)) localStorage.setItem('seen-lessons', JSON.stringify([...seen, n].sort()));
+  } catch { /* storage blocked: progress is optional */ }
+  const graph = document.querySelector<HTMLElement>('[data-graph]')!;
+  const detail = document.querySelector<HTMLElement>('[data-detail]')!;
+  const briefing = detail.querySelector<HTMLButtonElement>('[data-show="intro"]')!;
+  const wires = graph.querySelectorAll<SVGElement>('[data-wire]');
+  const nodes = graph.querySelectorAll<HTMLButtonElement>('.node[data-node]');
+
+  let current = 'intro';
+  // Exercise with hints on: the selected node's missing wires show as faint dashed ghosts.
+  const refreshGhosts = () => {
+    const on = document.documentElement.classList.contains('hints');
+    wires.forEach((w) => {
+      const mine = w.dataset.src === current || w.dataset.dst === current;
+      w.classList.toggle('ghost', on && mine && w.classList.contains('hidden'));
+    });
+  };
+  // Side panel: Briefing and Selected share the notes area; Connections and Result are areas of their own.
+  const bench = document.querySelector<HTMLElement>('[data-bench]')!;
+  const body = detail.querySelector<HTMLElement>('[data-deck-body]')!;
+  const selectedBtn = detail.querySelector<HTMLButtonElement>('[data-show-selected]')!;
+  const areaBtns = [...detail.querySelectorAll<HTMLButtonElement>('[data-area-btn]')];
+  let lastSelected = '';
+  let prevPressed: HTMLButtonElement = briefing;
+  const setArea = (area: string, pressed: HTMLButtonElement) => {
+    const was = [briefing, selectedBtn, ...areaBtns].find((b) => b.getAttribute('aria-pressed') === 'true');
+    if (area === 'glossary' && was && was.dataset.areaBtn !== 'glossary') prevPressed = was;
+    detail.querySelectorAll<HTMLElement>('[data-area]').forEach((a) => (a.hidden = a.dataset.area !== area));
+    [briefing, selectedBtn, ...areaBtns].forEach((b) => b.setAttribute('aria-pressed', String(b === pressed)));
+    body.scrollTop = 0;
+  };
+
+  const show = (id: string) => {
+    current = id;
+    if (id !== 'intro') { lastSelected = id; selectedBtn.disabled = false; }
+    detail.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => p.classList.toggle('on', p.dataset.panel === id));
+    setArea('notes', id === 'intro' ? briefing : selectedBtn);
+    nodes.forEach((n) => n.setAttribute('aria-pressed', String(n.dataset.node === id)));
+    const wireId = id.startsWith('wire:') ? id.slice(5) : null;
+    wires.forEach((w) => {
+      const hot = wireId ? w.dataset.wire === wireId : id !== 'intro' && (w.dataset.src === id || w.dataset.dst === id);
+      w.classList.toggle('hot', hot);
+      w.classList.toggle('dim', id !== 'intro' && !hot);
+    });
+    refreshGhosts();
+  };
+  const wide = matchMedia('(min-width: 1100px)');
+  // Picking something in the graph opens the panel (on narrow screens it scrolls to it instead).
+  const openPanel = () => {
+    if (!wide.matches) detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else if (bench.classList.contains('collapsed')) setCollapsed(false);
+  };
+  // Clicking what is already selected deselects it and goes back to the briefing.
+  const pick = (id: string) => {
+    if (current === id) return show('intro');
+    show(id);
+    openPanel();
+  };
+  nodes.forEach((n) => n.addEventListener('click', () => pick(n.dataset.node!)));
+  briefing.addEventListener('click', () => show('intro'));
+  selectedBtn.addEventListener('click', () => lastSelected && show(lastSelected));
+  areaBtns.forEach((b) => b.addEventListener('click', () => setArea(b.dataset.areaBtn!, b)));
+  graph.addEventListener('click', (e) => {
+    const target = e.target as Element;
+    const hit = target.closest<SVGElement>('[data-hit]');
+    if (hit) return pick(`wire:${hit.dataset.hit}`);
+    // A click on empty canvas (not a drag, which the graph swallows) deselects.
+    if (target.closest('[data-viewport]') && !target.closest('.node') && current !== 'intro') show('intro');
+  });
+  // Glossary tab: "Read more" in a term popover opens the entry here instead of leaving the lesson.
+  const glossaryBtn = areaBtns.find((b) => b.dataset.areaBtn === 'glossary')!;
+  const glossaryList = detail.querySelector<HTMLElement>('[data-area="glossary"] [data-glossary]')!;
+  document.addEventListener('glossary:open', ((e: CustomEvent<string>) => {
+    e.preventDefault();
+    setArea('glossary', glossaryBtn);
+    openPanel();
+    requestAnimationFrame(() => glossaryList.dispatchEvent(new CustomEvent('glossary:focus', { detail: e.detail })));
+  }) as EventListener);
+  detail.querySelector<HTMLButtonElement>('[data-back]')!.addEventListener('click', () => prevPressed.click());
+
+  // A connection made in the exercise opens its explanation.
+  graph.addEventListener('graph:wire', ((e: CustomEvent<string>) => show(`wire:${e.detail}`)) as EventListener);
+
+  // Wheel over the panel while the workbench is still partly below the window: scroll the page
+  // first until the workbench is fully in view, so the panel's own scrolling happens where you can see it.
+  const TOP = 12;
+  body.addEventListener('wheel', (e) => {
+    if (!wide.matches || e.ctrlKey || e.deltaY <= 0) return;
+    const gap = bench.getBoundingClientRect().top - TOP;
+    if (gap <= 1) return;
+    e.preventDefault();
+    const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * innerHeight : e.deltaY;
+    scrollBy({ top: Math.min(gap, px) });
+  }, { passive: false });
+
+  // Hide the panel to give the graph the full width (remembered in this browser).
+  const collapseBtn = detail.querySelector<HTMLButtonElement>('[data-collapse]')!;
+  const reopenBtn = bench.querySelector<HTMLButtonElement>('[data-reopen]')!;
+  function setCollapsed(on: boolean) {
+    bench.classList.toggle('collapsed', on);
+    reopenBtn.hidden = !on;
+    collapseBtn.setAttribute('aria-expanded', String(!on));
+    try { localStorage.setItem('panel-collapsed', on ? '1' : '0'); } catch { /* storage blocked */ }
+  }
+  collapseBtn.addEventListener('click', () => { setCollapsed(true); reopenBtn.focus(); });
+  reopenBtn.addEventListener('click', () => { setCollapsed(false); collapseBtn.focus(); });
+  try { if (localStorage.getItem('panel-collapsed') === '1') setCollapsed(true); } catch { /* storage blocked */ }
+
+  show(detail.querySelector('[data-panel="intro"]') ? 'intro' : nodes[0].dataset.node!);
+
+  // Exercise: wiring hints in the node panels are off until switched on (remembered in this browser).
+  const hintsBtn = document.querySelector<HTMLButtonElement>('[data-hints]');
+  if (hintsBtn) {
+    const setHints = (on: boolean) => {
+      document.documentElement.classList.toggle('hints', on);
+      hintsBtn.setAttribute('aria-checked', String(on));
+      try { localStorage.setItem('exercise-hints', on ? '1' : '0'); } catch { /* storage blocked */ }
+      refreshGhosts();
+    };
+    let saved = false;
+    try { saved = localStorage.getItem('exercise-hints') === '1'; } catch { /* storage blocked */ }
+    setHints(saved);
+    hintsBtn.addEventListener('click', () => setHints(hintsBtn.getAttribute('aria-checked') !== 'true'));
+  }
+
+  // Exercise: wires you connect by dragging count as done; Reveal shows the answer as a dashed wire.
+  const reveal = document.querySelector<HTMLElement>('[data-reveal]');
+  if (reveal) {
+    const btns = [...reveal.querySelectorAll<HTMLButtonElement>('[data-reveal-wire]')];
+    const all = reveal.querySelector<HTMLButtonElement>('[data-reveal-all]')!;
+    const count = reveal.querySelector<HTMLElement>('[data-count]')!;
+    const win = reveal.querySelector<HTMLElement>('[data-win]')!;
+    const wireOf = (id: string) => graph.querySelector<SVGElement>(`[data-wire="${CSS.escape(id)}"]`)!;
+    const made = (b: HTMLButtonElement) => wireOf(b.dataset.revealWire!).classList.contains('made');
+    const setRevealed = (b: HTMLButtonElement, on: boolean) => {
+      if (made(b)) return;
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? 'Hide' : 'Reveal';
+      const w = wireOf(b.dataset.revealWire!);
+      w.classList.toggle('hidden', !on);
+      w.classList.toggle('revealed', on);
+      refreshGhosts();
+    };
+    const sync = () => {
+      const n = btns.filter(made).length;
+      count.textContent = String(n);
+      const badge = document.querySelector('[data-badge]');
+      if (badge) badge.textContent = `${n}/${btns.length}`;
+      win.hidden = n < btns.length;
+      const open = btns.filter((b) => !made(b));
+      all.hidden = open.length === 0;
+      all.textContent = open.length && open.every((b) => b.getAttribute('aria-pressed') === 'true') ? 'Hide all' : 'Reveal all';
+    };
+    btns.forEach((b) => b.addEventListener('click', () => { setRevealed(b, b.getAttribute('aria-pressed') !== 'true'); sync(); }));
+    all.addEventListener('click', () => { const on = all.textContent === 'Reveal all'; btns.forEach((b) => setRevealed(b, on)); sync(); });
+    // Wires you connected are kept per lesson in this browser; the toolbar reset clears them after a confirm.
+    const resetWrap = document.querySelector<HTMLElement>('[data-reset-wrap]')!;
+    const resetAsk = resetWrap.querySelector<HTMLButtonElement>('[data-reset-ask]')!;
+    const resetConfirm = resetWrap.querySelector<HTMLElement>('[data-reset-confirm]')!;
+    const resetText = resetWrap.querySelector<HTMLElement>('[data-reset-text]')!;
+    let resetTimer = 0;
+    const askReset = (on: boolean) => {
+      clearTimeout(resetTimer);
+      resetAsk.hidden = on;
+      resetConfirm.hidden = !on;
+      if (on) {
+        const n = btns.filter(made).length;
+        resetText.textContent = `Clear ${n} wire${n === 1 ? '' : 's'}?`;
+        resetWrap.querySelector<HTMLButtonElement>('[data-reset-no]')!.focus();
+        resetTimer = window.setTimeout(() => askReset(false), 5000);
+      }
+    };
+    const key = `wired-${document.querySelector<HTMLElement>('[data-lesson]')!.dataset.lesson}`;
+    const save = () => {
+      try { localStorage.setItem(key, JSON.stringify(btns.filter(made).map((b) => b.dataset.revealWire))); } catch { /* storage blocked */ }
+    };
+    const markMade = (id: string) => {
+      const w = wireOf(id);
+      if (!w) return;
+      w.classList.remove('hidden', 'revealed', 'ghost');
+      w.classList.add('made');
+      reveal.querySelector(`[data-row="${CSS.escape(id)}"]`)?.classList.add('made');
+    };
+    const syncAll = () => { sync(); resetWrap.hidden = !btns.some(made); refreshGhosts(); };
+    graph.addEventListener('graph:wire', ((e: CustomEvent<string>) => { markMade(e.detail); save(); syncAll(); }) as EventListener);
+    resetAsk.addEventListener('click', () => askReset(true));
+    resetWrap.querySelector('[data-reset-no]')!.addEventListener('click', () => { askReset(false); resetAsk.focus(); });
+    resetConfirm.addEventListener('keydown', (e) => { if (e.key === 'Escape') { askReset(false); resetAsk.focus(); } });
+    resetWrap.querySelector('[data-reset-yes]')!.addEventListener('click', () => {
+      askReset(false);
+      btns.forEach((b) => {
+        const w = wireOf(b.dataset.revealWire!);
+        w.classList.remove('made', 'revealed');
+        w.classList.add('hidden');
+        b.setAttribute('aria-pressed', 'false');
+        b.textContent = 'Reveal';
+        reveal.querySelector(`[data-row="${CSS.escape(b.dataset.revealWire!)}"]`)?.classList.remove('made');
+      });
+      try { localStorage.removeItem(key); } catch { /* storage blocked */ }
+      syncAll();
+    });
+    let saved: string[] = [];
+    try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch { /* storage blocked */ }
+    saved.forEach(markMade);
+    syncAll();
+  }
+</script>

@@ -1,0 +1,17 @@
+---
+// A data-type chip in the wire colour. Types with a glossary entry open its popover.
+import { TYPE_COLOR } from '../data/meta';
+import { TYPE_TERM } from '../data/glossary';
+
+interface Props { type: string; label?: string }
+const { type, label = type } = Astro.props;
+const style = `--c:${TYPE_COLOR[type] ?? '#6b747e'}`;
+const term = TYPE_TERM[type];
+---
+{term
+  ? <button type="button" class="tchip" data-term={term} style={style} aria-label={`${label}: ${type}, what is this?`}>{label}</button>
+  : <span class="tchip" style={style}>{label}</span>}
+
+<style>
+  .tchip { display: inline-block; font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 2px 9px; border: 1px solid var(--c); color: color-mix(in srgb, var(--c) 80%, white); background: color-mix(in srgb, var(--c) 12%, transparent); }
+</style>

@@ -1,0 +1,82 @@
+---
+import Icon from '../components/Icon.astro';
+import '../styles/global.css';
+import TermPopover from '../components/TermPopover.astro';
+import { url } from '../lib/tutorials';
+
+interface Props { title: string; description?: string; progress?: { n: number; of: number } }
+const { title, description = 'Learn ComfyUI with 16 tested workflows, from a seven-node graph to inpainting, ControlNet and image editing.', progress } = Astro.props;
+const path = Astro.url.pathname;
+const nav = [
+  { href: url('/'), label: 'Missions' },
+  { href: url('nodes/'), label: 'Node index' },
+  { href: url('glossary/'), label: 'Glossary' },
+  { href: url('setup/'), label: 'Setup' },
+];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <link rel="icon" type="image/svg+xml" href={url('favicon.svg')}>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header wrap">
+    <a class="brand" href={url('/')}>
+      <Icon name="graph" size={30} class="mark" />
+      <span class="display">Learn ComfyUI</span>
+    </a>
+    {progress ? (
+      <div class="progress" aria-label={`Mission ${progress.n} of ${progress.of}`}>
+        <span class="mono">MISSION {String(progress.n).padStart(2, '0')} / {String(progress.of).padStart(2, '0')}</span>
+        <div class="bar"><div style={`width:${((progress.n + 1) / (progress.of + 1)) * 100}%`}></div></div>
+      </div>
+    ) : <div class="spacer"></div>}
+    <nav aria-label="Main">
+      {nav.map((l) => <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>)}
+      <a class="gh" href="https://github.com/aarsla/comfyui-tutorials" aria-label="Source on GitHub" title="Source on GitHub">
+        <Icon name="github-logo" weight="fill" size={18} />
+        <span>GitHub</span>
+      </a>
+    </nav>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer class="site-footer wrap">
+    <span>Prompts and input art from <a href="https://meridian-gules-eta.vercel.app/">Meridian</a>.</span>
+    <a href="https://github.com/aarsla/comfyui-tutorials">Source on GitHub</a>
+  </footer>
+  <TermPopover />
+</body>
+</html>
+
+<style>
+  .site-header { height: 64px; display: flex; align-items: center; gap: 28px; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; font-size: 18px; white-space: nowrap; }
+  /* Site mark: Phosphor graph (bold), orange, hollow centre. */
+  :global(.mark) { flex-shrink: 0; color: var(--orange); }
+  .spacer { flex: 1; }
+  .progress { flex: 1; display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); padding: 0 24px; }
+  .progress .bar { flex: 1; height: 4px; background: var(--line); }
+  .progress .bar div { height: 4px; background: var(--orange); }
+  nav { display: flex; gap: 24px; font-size: 16px; }
+  nav a { color: #b7bec6; text-decoration: none; padding: 10px 0; }
+  nav a:hover, nav a[aria-current='page'] { color: var(--text); }
+  nav .gh { display: inline-flex; align-items: center; gap: 7px; padding-left: 20px; border-left: 1px solid var(--line-2); }
+  .site-footer { display: flex; justify-content: space-between; gap: 16px; padding-top: 24px; padding-bottom: 32px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; margin-top: 48px; }
+  @media (max-width: 800px) {
+    .site-header { height: auto; flex-wrap: wrap; row-gap: 4px; padding-top: 10px; padding-bottom: 6px; }
+    .progress { order: 3; flex-basis: 100%; padding: 0 0 6px; }
+    nav { gap: 16px; font-size: 15px; margin-left: auto; }
+    nav .gh span { display: none; }
+    nav .gh { padding-left: 12px; }
+    .site-footer { flex-direction: column; }
+  }
+</style>

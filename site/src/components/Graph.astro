@@ -1,0 +1,354 @@
+---
+import type { Layout } from '../lib/graph';
+import { STAGES, TYPE_COLOR } from '../data/meta';
+import Icon from './Icon.astro';
+
+// wiring: exercise mode. Wires start hidden and the port rows become drag handles.
+// fill: on wide screens the box takes its container's height instead of sizing itself to the graph.
+interface Props { layout: Layout; noted?: Set<string>; wiring?: boolean; fill?: boolean }
+const { layout, noted = new Set(), wiring = false, fill = false } = Astro.props;
+const FRAME = ['#9c84d4', '#e07ad8', '#f08a2e', '#4fd8e8', '#4a9be0'];
+const pts = (p: [number, number][]) => p.map(([x, y]) => `${x},${y}`).join(' ');
+---
+<div class="graph" data-graph data-width={layout.width} data-height={layout.height} data-wiring={wiring ? '' : undefined} data-fill={fill ? '' : undefined}>
+  <div class="toolbar">
+    <slot name="start" />
+    <span class="mono hint" title={wiring
+      ? 'Drag from a dot to a matching dot to connect. Drag empty space to pan, Ctrl + scroll to zoom.'
+      : 'Click a node or a wire to read about it. Drag to pan, Ctrl + scroll or pinch to zoom.'}>{wiring
+      ? <>Drag from a dot to a matching dot to connect. Drag empty space to pan, <kbd>Ctrl</kbd> + scroll to zoom.</>
+      : <>Click a node or a wire to read about it. Drag to pan, <kbd>Ctrl</kbd> + scroll or pinch to zoom.</>}</span>
+    <slot name="tools" />
+    <div class="zoom" role="group" aria-label="Zoom">
+      <button type="button" data-act="out" aria-label="Zoom out"><Icon name="minus" /></button>
+      <span class="mono level" data-level aria-live="polite">100%</span>
+      <button type="button" data-act="in" aria-label="Zoom in"><Icon name="plus" /></button>
+      <button type="button" data-act="fit" aria-pressed="true">Fit</button>
+      <button type="button" data-act="actual" aria-pressed="false">100%</button>
+    </div>
+  </div>
+  <div class="viewport" data-viewport tabindex="0" aria-label="Workflow graph. Arrow keys pan, plus and minus zoom, 0 fits.">
+    <div class="wheel-hint mono" data-wheel-hint aria-hidden="true">Hold Ctrl (or Cmd) and scroll to zoom</div>
+    {wiring && <div class="toast mono" data-toast role="status" aria-live="polite"></div>}
+    <div class="canvas" data-canvas style={`width:${layout.width}px;height:${layout.height}px`}>
+      {layout.frames.map((f) => (
+        <div class="frame" style={`left:${f.x}px;width:${f.w}px;--c:${FRAME[f.stage]}`}>
+          <span class="mono">{f.stage + 1} · {STAGES[f.stage].toUpperCase()}</span>
+        </div>
+      ))}
+      <svg width={layout.width} height={layout.height} aria-hidden="true">
+        {layout.wires.map((w) => (
+          <>
+            <polyline points={pts(w.points)} stroke={w.color} data-wire={w.id} data-src={w.src} data-dst={w.dst}
+              data-sslot={w.sslot} data-dslot={w.dslot} class={wiring ? 'wire hidden' : 'wire'} />
+            <polyline points={pts(w.points)} class="hit" data-hit={w.id}><title>{w.label}</title></polyline>
+          </>
+        ))}
+        {wiring && <path class="temp" data-temp d="" />}
+      </svg>
+      {layout.nodes.map((n) => (
+        <button type="button" class:list={['node', { noted: noted.has(n.id) }]} data-node={n.id}
+          style={`left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px`}
+          aria-label={`${n.title} (${n.cls})`}>
+          <span class="title">{n.title}</span>
+          {noted.has(n.id) && <span class="dot" title="Has notes"></span>}
+          <span class="ports">
+            <span class="ins">{n.ins.map((p, i) => <span style={`--c:${TYPE_COLOR[p.type] ?? '#9aa3ad'}`} data-port="in" data-owner={n.id} data-slot={i} data-type={p.type} data-name={p.name}><i></i>{p.name}</span>)}</span>
+            <span class="outs">{n.outs.map((p, i) => <span style={`--c:${TYPE_COLOR[p.type] ?? '#9aa3ad'}`} data-port="out" data-owner={n.id} data-slot={i} data-type={p.type} data-name={p.name}>{p.name}<i></i></span>)}</span>
+          </span>
+          {n.widgets.length > 0 && (
+            <span class="widgets">{n.widgets.map(([k, v]) => <span><em>{k}</em> {v}</span>)}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .graph { background: var(--panel-2); border: 1px solid #2e3640; }
+  @media (min-width: 1100px) {
+    .graph[data-fill] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .graph[data-fill] .viewport { flex: 1; min-height: 0; }
+  }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #2e3640; }
+  .hint { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hint kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-2); padding: 0 4px; }
+  .zoom { display: flex; align-items: center; flex-shrink: 0; }
+  .level { width: 52px; text-align: center; font-size: 12px; color: var(--text-2); }
+  .zoom button[data-act='out'], .zoom button[data-act='in'] { min-width: 40px; display: grid; place-items: center; }
+  .zoom button[data-act='fit'] { margin-left: 8px; }
+  .zoom button { min-width: 56px; height: 36px; background: transparent; color: var(--text-2); border: 1px solid var(--line-2); font: 600 13px var(--display); letter-spacing: 0.04em; cursor: pointer; }
+  .zoom button[data-act='actual'] { border-left: 0; }
+  .zoom button[aria-pressed='true'] { background: var(--hull); color: var(--bg); border-color: var(--hull); }
+  .viewport { position: relative; overflow: hidden; height: 420px; cursor: grab; touch-action: none; user-select: none; background-image: radial-gradient(#2a313a 1px, transparent 1px); background-size: 20px 20px; }
+  .viewport.panning { cursor: grabbing; }
+  .viewport.panning .node { cursor: grabbing; }
+  .viewport:focus-visible { outline-offset: -2px; }
+  .canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .wheel-hint { position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%); background: rgba(16, 20, 24, 0.92); border: 1px solid var(--line-2); padding: 10px 16px; font-size: 13px; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .wheel-hint.on { opacity: 1; }
+  [data-wiring] [data-port] { cursor: crosshair; padding: 0 4px; }
+  [data-wiring] [data-port]:hover, [data-wiring] [data-port].target { background: color-mix(in srgb, var(--c) 22%, transparent); }
+  [data-wiring] [data-port] i { width: 10px; height: 10px; border-radius: 5px; box-shadow: 0 0 0 2px var(--node); }
+  [data-wiring] .ins span { margin-left: 0; }
+  [data-wiring] .outs span { margin-right: 0; }
+  .temp { fill: none; stroke-width: 3; stroke-dasharray: 6 5; }
+  .wire.made { opacity: 1; }
+  .wire.revealed { stroke-dasharray: 8 6; }
+  .wire.hidden.ghost { visibility: visible; stroke-dasharray: 3 7; stroke-width: 2; opacity: 0.5; }
+  [data-wiring] [data-port].compatible { background: color-mix(in srgb, var(--c) 30%, transparent); outline: 1px dashed var(--c); outline-offset: -1px; }
+  .toast { position: absolute; z-index: 3; left: 12px; bottom: 12px; max-width: calc(100% - 24px); padding: 8px 12px; font-size: 13px; background: rgba(16, 20, 24, 0.95); border: 1px solid var(--line-2); color: var(--text); opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  .toast.ok { border-color: #5bae63; color: #9fdca5; }
+  .toast.bad { border-color: #e05555; color: #f2a0a0; }
+  @media (max-width: 800px) { .hint { display: none; } .toolbar { justify-content: flex-end; } }
+  .frame { position: absolute; top: 12px; bottom: 12px; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); background: color-mix(in srgb, var(--c) 6%, transparent); }
+  .frame span { display: block; padding: 6px 10px; font-size: 12px; color: color-mix(in srgb, var(--c) 70%, white); }
+  svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .wire { fill: none; stroke-width: 2.5; opacity: 0.85; transition: opacity 0.15s; }
+  .wire.hidden { visibility: hidden; }
+  .wire.dim { opacity: 0.18; }
+  .wire.hot { opacity: 1; stroke-width: 3.5; }
+  .hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+  .wire.hidden + .hit { display: none; }
+  .wire:has(+ .hit:hover) { opacity: 1; stroke-width: 4.5; }
+  .node { position: absolute; display: flex; flex-direction: column; text-align: left; padding: 0; background: var(--node); color: var(--text); border: 1px solid var(--line-2); border-radius: 6px; font: inherit; cursor: pointer; overflow: hidden; }
+  .node:hover { border-color: #6b747e; }
+  .node[aria-pressed='true'] { border: 2px solid var(--cyan); box-shadow: 0 0 0 4px rgba(79, 216, 232, 0.18); }
+  .title { height: 30px; line-height: 30px; padding: 0 26px 0 10px; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #2d353e; }
+  .dot { position: absolute; right: 10px; top: 11px; width: 8px; height: 8px; border-radius: 4px; background: var(--orange); }
+  .ports { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; }
+  .ins, .outs { display: flex; flex-direction: column; }
+  .ins span, .outs span { height: 20px; line-height: 20px; color: color-mix(in srgb, var(--c) 75%, white); display: flex; align-items: center; gap: 6px; }
+  .ins span { margin-left: -4px; }
+  .outs span { margin-right: -4px; justify-content: flex-end; }
+  .ports i { width: 8px; height: 8px; border-radius: 4px; background: var(--c); }
+  .widgets { display: flex; flex-direction: column; padding: 6px 10px 0; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .widgets span { height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .widgets em { font-style: normal; color: #6f7883; }
+</style>
+
+<script>
+  const MIN = 0.1, MAX = 2.5;
+  for (const g of document.querySelectorAll<HTMLElement>('[data-graph]')) {
+    const vp = g.querySelector<HTMLElement>('[data-viewport]')!;
+    const canvas = g.querySelector<HTMLElement>('[data-canvas]')!;
+    const level = g.querySelector<HTMLElement>('[data-level]')!;
+    const hint = g.querySelector<HTMLElement>('[data-wheel-hint]')!;
+    const btn = (a: string) => g.querySelector<HTMLButtonElement>(`[data-act="${a}"]`)!;
+    const W = Number(g.dataset.width), H = Number(g.dataset.height);
+    let s = 1, x = 0, y = 0, mode: 'fit' | 'free' = 'fit';
+
+    const draw = () => {
+      canvas.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+      level.textContent = `${Math.round(s * 100)}%`;
+      btn('fit').setAttribute('aria-pressed', String(mode === 'fit'));
+      btn('actual').setAttribute('aria-pressed', String(mode === 'free' && Math.abs(s - 1) < 0.001));
+    };
+    // Keep at least a strip of the graph in view so it can't be lost off screen.
+    const clamp = () => {
+      const m = 60, w = W * s, h = H * s, vw = vp.clientWidth, vh = vp.clientHeight;
+      x = w <= vw ? Math.min(Math.max(x, 0), vw - w) : Math.min(Math.max(x, vw - w - m), m);
+      y = h <= vh ? Math.min(Math.max(y, 0), vh - h) : Math.min(Math.max(y, vh - h - m), m);
+    };
+    // Box height follows the graph's shape: short graphs get a short box, tall ones stop at ~70 % of the screen.
+    const filling = matchMedia('(min-width: 1100px)');
+    const sizeBox = () => {
+      if (g.hasAttribute('data-fill') && filling.matches) { vp.style.height = ''; return; }
+      const maxH = Math.max(280, Math.min(innerHeight * 0.7, 760));
+      const byWidth = H * Math.min(1, vp.clientWidth / W) + 16;
+      vp.style.height = `${Math.round(Math.min(maxH, Math.max(260, byWidth)))}px`;
+    };
+    const fit = () => {
+      mode = 'fit';
+      const pad = 12, vw = vp.clientWidth - pad * 2, vh = vp.clientHeight - pad * 2;
+      s = Math.min(1, vw / W, vh / H);
+      x = (vp.clientWidth - W * s) / 2;
+      y = (vp.clientHeight - H * s) / 2;
+      draw();
+    };
+    const zoomAt = (ns: number, px: number, py: number) => {
+      ns = Math.min(MAX, Math.max(MIN, ns));
+      x = px - ((px - x) * ns) / s;
+      y = py - ((py - y) * ns) / s;
+      s = ns;
+      mode = 'free';
+      clamp();
+      draw();
+    };
+    const center = () => [vp.clientWidth / 2, vp.clientHeight / 2] as const;
+
+    btn('in').addEventListener('click', () => zoomAt(s * 1.25, ...center()));
+    btn('out').addEventListener('click', () => zoomAt(s / 1.25, ...center()));
+    btn('fit').addEventListener('click', fit);
+    btn('actual').addEventListener('click', () => zoomAt(1, ...center()));
+
+    // Ctrl/Cmd + wheel (and trackpad pinch, which arrives as ctrl + wheel) zooms at the cursor.
+    // A plain wheel scrolls the page; show a hint instead of trapping it.
+    let hintTimer = 0;
+    vp.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        hint.classList.add('on');
+        clearTimeout(hintTimer);
+        hintTimer = window.setTimeout(() => hint.classList.remove('on'), 1200);
+        return;
+      }
+      e.preventDefault();
+      const r = vp.getBoundingClientRect();
+      // Mouse wheel notches send ~100 per step; trackpad pinch sends small deltas, so it gets more gain.
+      const gain = Math.abs(e.deltaY) < 40 ? 0.01 : 0.002;
+      zoomAt(s * Math.exp(-e.deltaY * gain), e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+
+    // Drag to pan (mouse, pen, one finger); two fingers pinch-zoom. A small move threshold keeps node clicks working.
+    const pts = new Map<number, { x: number; y: number }>();
+    let start: { x: number; y: number; ox: number; oy: number } | null = null;
+    let pinch: { d: number; s: number } | null = null;
+    let moved = false;
+    vp.addEventListener('pointerdown', (e) => {
+      if ((e.target as HTMLElement).closest('.wheel-hint')) return;
+      if (g.hasAttribute('data-wiring') && (e.target as HTMLElement).closest('[data-port]')) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 1) { start = { x: e.clientX, y: e.clientY, ox: x, oy: y }; moved = false; }
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s };
+      }
+    });
+    vp.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch && pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        const r = vp.getBoundingClientRect();
+        zoomAt(pinch.s * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.d), (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+        moved = true;
+        return;
+      }
+      if (!start) return;
+      const dx = e.clientX - start.x, dy = e.clientY - start.y;
+      if (!moved && Math.hypot(dx, dy) < 5) return;
+      if (!moved) { moved = true; vp.setPointerCapture(e.pointerId); vp.classList.add('panning'); }
+      x = start.ox + dx; y = start.oy + dy; mode = 'free';
+      clamp();
+      draw();
+    });
+    const end = (e: PointerEvent) => {
+      pts.delete(e.pointerId);
+      if (pts.size < 2) pinch = null;
+      if (pts.size === 0) { start = null; vp.classList.remove('panning'); }
+    };
+    vp.addEventListener('pointerup', end);
+    vp.addEventListener('pointercancel', end);
+    // A drag that started on a node must not also select it.
+    vp.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+
+    vp.addEventListener('keydown', (e) => {
+      if (e.target !== vp) return;
+      const step = 60;
+      const k = e.key;
+      if (k === 'ArrowLeft') x += step; else if (k === 'ArrowRight') x -= step;
+      else if (k === 'ArrowUp') y += step; else if (k === 'ArrowDown') y -= step;
+      else if (k === '+' || k === '=') return void (e.preventDefault(), zoomAt(s * 1.25, ...center()));
+      else if (k === '-') return void (e.preventDefault(), zoomAt(s / 1.25, ...center()));
+      else if (k === '0') return void (e.preventDefault(), fit());
+      else return;
+      e.preventDefault();
+      mode = 'free';
+      clamp();
+      draw();
+    });
+
+    // Exercise mode: drag from a port to a port. The answer is the (hidden) wire set; a drop either
+    // reveals the matching wire or explains why it does not fit.
+    if (g.hasAttribute('data-wiring')) {
+      const temp = g.querySelector<SVGPathElement>('[data-temp]')!;
+      const toast = g.querySelector<HTMLElement>('[data-toast]')!;
+      let toastTimer = 0;
+      const say = (msg: string, kind: 'ok' | 'bad') => {
+        toast.textContent = msg;
+        toast.className = `toast mono on ${kind}`;
+        clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove('on'), 2600);
+      };
+      const titleOf = (el: HTMLElement) => el.closest('.node')!.querySelector('.title')!.textContent;
+      const toCanvas = (cx: number, cy: number) => {
+        const r = canvas.getBoundingClientRect();
+        return [(cx - r.left) / s, (cy - r.top) / s];
+      };
+      const dotXY = (el: HTMLElement) => {
+        const r = el.querySelector('i')!.getBoundingClientRect();
+        return toCanvas(r.left + r.width / 2, r.top + r.height / 2);
+      };
+      let from: HTMLElement | null = null;
+      let over: HTMLElement | null = null;
+      vp.addEventListener('pointerdown', (e) => {
+        const p = (e.target as HTMLElement).closest<HTMLElement>('[data-port]');
+        if (!p) return;
+        e.preventDefault();
+        from = p;
+        // Light up every port this one could connect to: the other side, same type.
+        const other = p.dataset.port === 'out' ? 'in' : 'out';
+        g.querySelectorAll<HTMLElement>(`[data-port="${other}"][data-type="${p.dataset.type}"]`).forEach((q) => {
+          if (q.dataset.owner !== p.dataset.owner) q.classList.add('compatible');
+        });
+        vp.setPointerCapture(e.pointerId);
+        temp.setAttribute('stroke', getComputedStyle(p).getPropertyValue('--c'));
+      });
+      vp.addEventListener('pointermove', (e) => {
+        if (!from) return;
+        const [x0, y0] = dotXY(from);
+        const [x1, y1] = toCanvas(e.clientX, e.clientY);
+        temp.setAttribute('d', `M${x0},${y0} L${x1},${y1}`);
+        const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-port]') ?? null;
+        if (hit !== over) { over?.classList.remove('target'); over = hit && hit !== from ? hit : null; over?.classList.add('target'); }
+      });
+      const finish = (e: PointerEvent) => {
+        if (!from) return;
+        const start = from;
+        g.querySelectorAll('.compatible').forEach((q) => q.classList.remove('compatible'));
+        // The click that follows a port drag lands on empty canvas; it must not count as a click there.
+        const swallow = (ev: Event) => ev.stopPropagation();
+        vp.addEventListener('click', swallow, { capture: true, once: true });
+        setTimeout(() => vp.removeEventListener('click', swallow, { capture: true }), 0);
+        from = null;
+        temp.setAttribute('d', '');
+        over?.classList.remove('target');
+        over = null;
+        const end = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-port]');
+        if (!end || end === start) return;
+        if (end.dataset.port === start.dataset.port) return say('Connect an output (right side) to an input (left side).', 'bad');
+        const [o, i] = start.dataset.port === 'out' ? [start, end] : [end, start];
+        if (o.dataset.type !== i.dataset.type) {
+          return say(`${o.dataset.type} does not fit into ${i.dataset.name}, which takes ${i.dataset.type}.`, 'bad');
+        }
+        const wire = g.querySelector<SVGElement>(`[data-wire][data-src="${o.dataset.owner}"][data-sslot="${o.dataset.slot}"][data-dst="${i.dataset.owner}"][data-dslot="${i.dataset.slot}"]`);
+        if (!wire) return say(`The types match, but ${titleOf(i)} ${i.dataset.name} gets its input from somewhere else. Check the hint.`, 'bad');
+        wire.classList.remove('hidden');
+        wire.classList.add('made');
+        say(`Connected ${titleOf(o)} ${o.dataset.name} → ${titleOf(i)} ${i.dataset.name}.`, 'ok');
+        g.dispatchEvent(new CustomEvent('graph:wire', { bubbles: true, detail: wire.dataset.wire }));
+      };
+      vp.addEventListener('pointerup', finish);
+      vp.addEventListener('pointercancel', () => {
+        from = null;
+        temp.setAttribute('d', '');
+        g.querySelectorAll('.compatible').forEach((q) => q.classList.remove('compatible'));
+      });
+    }
+
+    let lastW = 0, lastH = 0;
+    const onResize = () => {
+      if (vp.clientWidth === lastW && vp.clientHeight === lastH) return;
+      lastW = vp.clientWidth;
+      lastH = vp.clientHeight;
+      sizeBox();
+      lastH = vp.clientHeight;
+      if (mode === 'fit') fit(); else { clamp(); draw(); }
+    };
+    new ResizeObserver(onResize).observe(vp);
+    sizeBox();
+    fit();
+  }
+</script>

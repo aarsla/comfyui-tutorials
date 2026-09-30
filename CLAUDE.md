@@ -34,14 +34,17 @@ off-white + orange robots with cyan eyes, cream crew suits with orange bands, sl
 
 ```
 tutorials.py              # THE source of truth: every tutorial = API prompt + notes (+ exercise hints)
+models.json               # every model file: folder + verified Hugging Face URL (rename: published under another name)
 comfy.py                  # run(prompt) -> queue an API prompt, wait, return output file paths
 test_tutorials.py [NN..]  # run every (or selected) tutorial through the API; writes test_results.json
-publish.py [NN..]         # stage tutorials + layout scripts into ComfyUI userdata (tmp_*); --cleanup removes them
+publish.py [NN..]         # stage tutorials + models + layout scripts into ComfyUI userdata (tmp_*); --cleanup removes them;
+                          #   --fetch copies the built workflows into workflows/Tutorials/ for the site
 layout/build_layout.js    # in-page builder: stage frames, column layout, orthogonal wire routing, notes, checks
 layout/build_exercise.js  # in-page builder for layout:"exercise" tutorials (classic layout, no wires, hint boxes)
 make_samples.py           # generate sample input images with Z-Image
 get_loras.py              # download + sha256-verify the Krea-2 style LoRAs
-workflows/                # other (non-tutorial) workflows
+workflows/Tutorials/      # built UI workflows fetched from ComfyUI (served by the site; carry model download links)
+site/                     # Astro site for GitHub Pages (npm run dev / build / check); reads tutorials.py + models.json
 images/                   # tutorial_results_gallery.jpg (one result per tutorial), sampler shootout sheets
 ```
 
@@ -68,10 +71,24 @@ images/                   # tutorial_results_gallery.jpg (one result per tutoria
    out.join('\n')
    ```
    Every line must report `overlaps=0 wire-through-node=0 prompt=identical`.
-5. **Clean up**: `python publish.py --cleanup`, close the browser tab. Tell the user to press **Ctrl+R** in
+5. **Fetch + clean up**: `python publish.py --fetch` (saved workflows into `workflows/Tutorials/` for the site), then
+   `python publish.py --cleanup`, close the browser tab. Tell the user to press **Ctrl+R** in
    Comfy Desktop to see updated workflows.
 6. **Visual check** (optional but recommended): load the saved workflow with `app.loadGraphData`, click the canvas,
    press `.` (fit view), screenshot. Note text only renders above ~60 % zoom.
+
+## Website (`site/`)
+
+- Astro, deployed to `https://aarsla.github.io/comfyui-tutorials/`. `npm run dev` / `npm run build` run
+  `scripts/export.mjs` first (tutorials.py → `src/data/tutorials.json`, models.json, workflows → `public/workflows/`).
+- Lesson graphs are laid out in the browser build by `src/lib/graph.ts` (same rules as `build_layout.js`);
+  `npm run check` verifies no wire passes behind a node. New node classes need `OUTPUTS`, `STAGE_OF` and `NODE_INFO`
+  entries in `src/data/meta.ts`; new lessons need a `LESSONS` entry (module, titles, result images in `public/results/`).
+- Icons: Phosphor (MIT) via `src/components/Icon.astro` (`<Icon name="..." />`, bold weight by default), inlined at
+  build time. The site mark and `public/favicon.svg` are Phosphor `graph` (bold) in orange.
+- New model file: add it to `models.json` (check the URL resolves). The builders put the links into each loader node's
+  `properties.models`, so ComfyUI offers to download missing models. The setup page tells users to rely on that, so
+  `npm run export` warns while any served workflow lacks the links (rebuild + `publish.py --fetch` before deploying).
 
 ## Layout rules (user preferences - keep them)
 

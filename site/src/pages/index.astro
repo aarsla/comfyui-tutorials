@@ -1,0 +1,167 @@
+---
+import Base from '../layouts/Base.astro';
+import { TUTORIALS, byModule, lessonUrl, url } from '../lib/tutorials';
+
+const decks = byModule();
+const first = TUTORIALS[0];
+---
+<Base title="Learn ComfyUI | Tested tutorial workflows">
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hazard"></div>
+      <div class="inner">
+        <div class="eyebrow">{TUTORIALS.length} tutorials · every workflow tested</div>
+        <h1 class="display">Learn ComfyUI by building real workflows</h1>
+        <p>A graded series from a seven-node graph to inpainting, ControlNet and image editing. Every workflow runs as downloaded, and each lesson explains the graph on the graph itself: click a node to read what it does. Prompts and input art come from <a href="https://meridian-gules-eta.vercel.app/">Meridian</a>, a sci-fi horror game.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href={lessonUrl(first)} data-resume>Start with 00: node basics</a>
+          <a class="btn btn-ghost" href={url('setup/')}>Setup and models</a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src={url('results/t05b.jpg')} alt="Anchor Station hanging on cables in storm clouds, retro anime style" width="300" height="300" />
+      <span class="mono cap">Result · mission 05 · Krea-2 style B</span>
+    </div>
+  </section>
+
+  <section class="path wrap" aria-labelledby="path-h">
+    <div class="sec-head">
+      <h2 id="path-h" class="display">Flight path</h2>
+      <span data-progress-text>Lessons you open are marked here. Progress stays in this browser.</span>
+      <button type="button" class="reset" data-reset hidden title="Clears opened lessons and the wires saved in exercises">Reset progress</button>
+    </div>
+    <ol class="stops">
+      {decks.map((d) => (
+        <li class="deck" style={`--n:${d.lessons.length}`}>
+          <span class="mono deck-name">Deck {d.deck} · {d.name}</span>
+          <ol>
+            {d.lessons.map((t) => (
+              <li>
+                <a href={lessonUrl(t)} data-stop={t.n} aria-label={`${t.n} ${t.title}`}>
+                  <span class="mono dot">{t.n}</span>
+                  <span class="cap">{t.short}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  {decks.map((d) => (
+    <section class="deck-sec wrap" id={d.id}>
+      <div class="sec-head">
+        <h2 class="display">Deck {d.deck} · {d.name}</h2>
+        <span>{d.blurb}</span>
+      </div>
+      <div class="cards">
+        {d.lessons.map((t) => (
+          <a class="card" href={lessonUrl(t)} data-card={t.n}>
+            {t.results[0]
+              ? <img src={url(`results/${t.results[0].src}`)} alt="" loading="lazy" width="300" height="300" />
+              : <span class="ph mono">{t.exercise ? 'Exercise: no new image' : 'Comparison lesson'}</span>}
+            <span class="card-body">
+              <span class="mono meta"><span>Mission {t.n} · {t.model}</span><span class="status" data-status></span></span>
+              <span class="card-title">{t.title}</span>
+              <span class="card-desc">{t.desc}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .hero { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 1fr); min-height: 560px; }
+  .hero-text { background: var(--panel); display: flex; flex-direction: column; }
+  .inner { padding: 52px 56px 48px; display: flex; flex-direction: column; gap: 22px; flex: 1; }
+  h1 { margin: 0; font-size: clamp(38px, 5vw, 58px); line-height: 1.02; }
+  .inner p { margin: 0; font-size: 19px; color: var(--text-2); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: auto; padding-top: 12px; }
+  .hero-img { position: relative; min-height: 320px; }
+  .hero-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-img .cap { position: absolute; right: 20px; bottom: 20px; background: var(--bg); padding: 8px 12px; font-size: 12px; color: var(--text-2); }
+  .sec-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 22px; color: var(--muted); }
+  .sec-head h2 { margin: 0; font-size: 26px; font-weight: 600; color: var(--text); }
+  .reset { margin-left: auto; min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); font: 600 13px var(--display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+  .reset:hover { border-color: var(--hull); color: var(--text); }
+  .path { padding-top: 48px; padding-bottom: 40px; border-bottom: 1px solid var(--line); }
+  .stops { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); }
+  .deck { grid-column: span var(--n); display: flex; flex-direction: column; gap: 14px; }
+  .deck-name { font-size: 12px; color: var(--muted); border-top: 2px solid var(--line-2); padding-top: 8px; margin-right: 12px; text-transform: uppercase; }
+  .deck ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+  .deck li li { display: flex; }
+  .deck a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; position: relative; }
+  .deck a::before { content: ''; position: absolute; top: 21px; left: 0; right: 0; height: 2px; background: var(--line-2); }
+  .dot { position: relative; width: 44px; height: 44px; border-radius: 22px; display: grid; place-items: center; font-size: 14px; background: var(--bg); border: 1px solid #4a545f; color: var(--muted); }
+  .deck a .cap { font-size: 13px; color: #8a939d; text-align: center; line-height: 1.2; }
+  .deck a:hover .dot { border-color: var(--hull); color: var(--text); }
+  .deck a.done .dot { background: var(--orange); border-color: var(--orange); color: var(--bg); }
+  .deck a.done .cap { color: var(--text-2); }
+  .deck a.current .dot { border: 3px solid var(--cyan); color: var(--cyan); }
+  .deck a.current .cap { color: var(--cyan); }
+  .deck-sec { padding-top: 44px; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .card { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); color: var(--text); text-decoration: none; }
+  .card:hover { border-color: #4a545f; color: var(--text); }
+  .card img, .ph { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .ph { display: grid; place-items: center; font-size: 13px; color: var(--muted); border-bottom: 1px dashed var(--line-2); background-image: radial-gradient(#2a313a 1px, transparent 1px); background-size: 20px 20px; }
+  .card-body { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); text-transform: uppercase; }
+  .status { color: var(--cyan); }
+  .card-title { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.2; }
+  .card-desc { font-size: 15px; color: #b7bec6; }
+  @media (max-width: 1100px) {
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stops { grid-template-columns: minmax(0, 1fr); row-gap: 20px; }
+    .deck { grid-column: auto; }
+  }
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    .inner { padding: 32px 16px; }
+    .hero-img { order: -1; min-height: 240px; }
+    .deck a .cap { font-size: 12px; }
+  }
+  @media (max-width: 520px) {
+    .cards { grid-template-columns: minmax(0, 1fr); }
+    .dot { width: 36px; height: 36px; font-size: 12px; }
+    .deck a::before { top: 17px; }
+  }
+</style>
+
+<script>
+  let seen: string[] = [];
+  try { seen = JSON.parse(localStorage.getItem('seen-lessons') || '[]'); } catch { /* storage blocked */ }
+  const stops = [...document.querySelectorAll<HTMLAnchorElement>('[data-stop]')];
+  const next = stops.find((a) => !seen.includes(a.dataset.stop!));
+  for (const a of stops) {
+    a.classList.toggle('done', seen.includes(a.dataset.stop!));
+    a.classList.toggle('current', a === next && seen.length > 0);
+  }
+  // Reset clears everything the course keeps in this browser: opened lessons and saved exercise wires.
+  const reset = document.querySelector<HTMLButtonElement>('[data-reset]')!;
+  let wiredKeys: string[] = [];
+  try { wiredKeys = Object.keys(localStorage).filter((k) => k.startsWith('wired-')); } catch { /* storage blocked */ }
+  reset.hidden = seen.length === 0 && wiredKeys.length === 0;
+  reset.addEventListener('click', () => {
+    try {
+      localStorage.removeItem('seen-lessons');
+      wiredKeys.forEach((k) => localStorage.removeItem(k));
+    } catch { /* storage blocked */ }
+    location.reload();
+  });
+  if (seen.length) {
+    const text = document.querySelector('[data-progress-text]');
+    if (text) text.textContent = `${seen.length} of ${stops.length} opened. Progress stays in this browser.`;
+    if (next) {
+      const resume = document.querySelector<HTMLAnchorElement>('[data-resume]')!;
+      resume.href = next.href;
+      resume.textContent = `Resume: ${next.getAttribute('aria-label')}`;
+      const card = document.querySelector(`[data-card="${next.dataset.stop}"] [data-status]`);
+      if (card) card.textContent = 'Next';
+    }
+  }
+</script>

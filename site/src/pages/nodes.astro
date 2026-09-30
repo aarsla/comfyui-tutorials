@@ -1,0 +1,131 @@
+---
+import Icon from '../components/Icon.astro';
+import Base from '../layouts/Base.astro';
+import { TUTORIALS, lessonUrl, type Tutorial } from '../lib/tutorials';
+import { layoutGraph } from '../lib/graph';
+import { NODE_INFO, OUTPUTS, STAGES, STAGE_OF, TYPE_COLOR } from '../data/meta';
+import TypeChip from '../components/TypeChip.astro';
+import { linkTerms } from '../lib/terms';
+
+interface Entry { cls: string; stage: number; ins: Map<string, string>; outs: [string, string][]; lessons: Tutorial[] }
+const entries = new Map<string, Entry>();
+for (const t of TUTORIALS) {
+  for (const n of layoutGraph(t.graph).nodes) {
+    const e = entries.get(n.cls) ?? { cls: n.cls, stage: STAGE_OF[n.cls] ?? n.stage, ins: new Map(), outs: OUTPUTS[n.cls] ?? [], lessons: [] };
+    n.ins.forEach((p) => e.ins.set(p.name, p.type));
+    if (!e.lessons.includes(t)) e.lessons.push(t);
+    entries.set(n.cls, e);
+  }
+}
+const list = [...entries.values()].sort((a, b) => a.stage - b.stage || a.cls.localeCompare(b.cls));
+const types = ['MODEL', 'CLIP', 'VAE', 'CONDITIONING', 'LATENT', 'IMAGE', 'MASK'];
+const chip = (type: string) => `--c:${TYPE_COLOR[type] ?? '#9aa3ad'}`;
+---
+<Base title="Node index | Learn ComfyUI" description="Every ComfyUI node used in the course, what it does and which lessons use it.">
+  <section class="head wrap">
+    <div class="eyebrow">Reference</div>
+    <h1 class="display">Node index</h1>
+    <p>All {list.length} nodes used in the course, in graph order from models to output.</p>
+  </section>
+
+  <section class="filters wrap">
+    <label class="search">
+      <Icon name="magnifying-glass" />
+      <input type="search" placeholder="Search nodes" aria-label="Search nodes" data-q />
+      <button type="button" class="clear" aria-label="Clear search" data-clear hidden>
+        <Icon name="x" size={14} />
+      </button>
+    </label>
+    <div class="types" role="group" aria-label="Filter by data type">
+      <button type="button" data-type="" aria-pressed="true">All types</button>
+      {types.map((ty) => <button type="button" data-type={ty} aria-pressed="false" style={chip(ty)}><i></i>{ty}</button>)}
+    </div>
+    <span class="mono count"><span data-count>{list.length}</span> nodes</span>
+  </section>
+
+  <section class="grid wrap">
+    {list.map((e) => (
+      <article class="card" id={e.cls} data-entry data-search={`${e.cls} ${NODE_INFO[e.cls] ?? ''}`.toLowerCase()}
+        data-types={[...e.ins.values(), ...e.outs.map((o) => o[1])].join(' ')}>
+        <div class="mono stage" style={`--s:${e.stage}`}>{e.stage + 1} · {STAGES[e.stage].toUpperCase()}</div>
+        <h2>{e.cls}</h2>
+        <p set:html={linkTerms(NODE_INFO[e.cls] ?? '')} />
+        <div class="io">
+          <span class="lbl">In</span>
+          {e.ins.size ? [...e.ins].map(([name, ty]) => <TypeChip type={ty} label={name} />) : <span class="tchip">none</span>}
+        </div>
+        <div class="io">
+          <span class="lbl">Out</span>
+          {e.outs.length ? e.outs.map(([name, ty]) => <TypeChip type={ty} label={name} />) : <span class="tchip">none</span>}
+        </div>
+        <div class="used">
+          <span class="lbl">Used in</span>
+          {e.lessons.map((t) => <a href={lessonUrl(t)} title={t.title}>{t.n}</a>)}
+        </div>
+      </article>
+    ))}
+  </section>
+  <p class="wrap empty" data-empty hidden>No nodes match.</p>
+</Base>
+
+<style>
+  .head { padding-top: 44px; padding-bottom: 24px; display: flex; flex-direction: column; gap: 10px; }
+  h1 { margin: 0; font-size: clamp(34px, 4vw, 52px); }
+  .head p { margin: 0; font-size: 19px; color: var(--text-2); }
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding-bottom: 24px; }
+  .search { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; background: var(--panel); border: 1px solid var(--line-2); color: var(--muted); width: 280px; }
+  .search { padding-right: 4px; }
+  .search:focus-within { border-color: var(--cyan); }
+  .search input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--text); font: inherit; font-size: 15px; }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .clear { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; background: transparent; border: 0; color: var(--muted); cursor: pointer; }
+  .clear:hover { color: var(--text); }
+  .clear[hidden] { display: none; }
+  .types { display: flex; flex-wrap: wrap; gap: 6px; }
+  .types button { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line-2); color: var(--text-2); font: 500 12px var(--mono); cursor: pointer; }
+  .types button i { width: 14px; height: 3px; background: var(--c); }
+  .types button[aria-pressed='true'] { background: var(--hull); color: var(--bg); border-color: var(--hull); }
+  .count { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .card[hidden] { display: none; }
+  .card:target { border-color: var(--cyan); }
+  .card { scroll-margin-top: 24px; }
+  .stage { font-size: 12px; color: var(--cyan); }
+  .card h2 { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 600; word-break: break-word; }
+  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
+  .io, .used { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .lbl { font-size: 13px; color: var(--muted); width: 56px; }
+  .tchip { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border: 1px solid var(--c, #6b747e); color: var(--c, #9aa3ad); background: color-mix(in srgb, var(--c, #6b747e) 12%, transparent); }
+  .used a { font-family: var(--mono); font-size: 12px; padding: 2px 7px; border: 1px solid var(--line-2); color: var(--text-2); text-decoration: none; }
+  .used a:hover { border-color: var(--cyan); color: var(--cyan); }
+  .empty { color: var(--muted); }
+  @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) { .grid { grid-template-columns: minmax(0, 1fr); } .search { width: 100%; } .count { margin-left: 0; } }
+</style>
+
+<script>
+  const q = document.querySelector<HTMLInputElement>('[data-q]')!;
+  const btns = [...document.querySelectorAll<HTMLButtonElement>('[data-type]')];
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-entry]')];
+  const count = document.querySelector('[data-count]')!;
+  const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+  let type = '';
+  const apply = () => {
+    const s = q.value.trim().toLowerCase();
+    let n = 0;
+    for (const c of cards) {
+      const ok = (!s || c.dataset.search!.includes(s)) && (!type || c.dataset.types!.split(' ').includes(type));
+      c.hidden = !ok;
+      if (ok) n++;
+    }
+    count.textContent = String(n);
+    empty.hidden = n > 0;
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.type === type)));
+  };
+  const clear = document.querySelector<HTMLButtonElement>('[data-clear]')!;
+  q.addEventListener('input', () => { clear.hidden = !q.value; apply(); });
+  q.addEventListener('keydown', (e) => { if (e.key === 'Escape' && q.value) { q.value = ''; clear.hidden = true; apply(); } });
+  clear.addEventListener('click', () => { q.value = ''; clear.hidden = true; apply(); q.focus(); });
+  btns.forEach((b) => b.addEventListener('click', () => { type = b.dataset.type!; apply(); }));
+</script>

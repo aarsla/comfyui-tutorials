@@ -1,0 +1,13 @@
+---
+// Phosphor icon (MIT, https://phosphoricons.com), inlined at build time from @phosphor-icons/core.
+// `bold` matches the site's line weight at 16 px. Duotone's tinted layer follows --icon-duo (default: 20 % of the colour).
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface Props { name: string; weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'; size?: number; class?: string; label?: string }
+const { name, weight = 'bold', size = 16, class: cls, label } = Astro.props;
+const file = join(process.cwd(), 'node_modules/@phosphor-icons/core/assets', weight, weight === 'regular' ? `${name}.svg` : `${name}-${weight}.svg`);
+const inner = readFileSync(file, 'utf8').replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+---
+<svg class:list={['icon', cls]} width={size} height={size} viewBox="0 0 256 256" fill="currentColor"
+  aria-hidden={label ? undefined : 'true'} role={label ? 'img' : undefined} aria-label={label} set:html={inner} />

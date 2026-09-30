@@ -1,0 +1,164 @@
+---
+import Icon from '../components/Icon.astro';
+import { marked } from 'marked';
+import Base from '../layouts/Base.astro';
+import { HOWTO_MD, TUTORIALS, lessonUrl } from '../lib/tutorials';
+import { MODEL_FILES } from '../data/meta';
+import { linkTerms } from '../lib/terms';
+
+// Matched sets: a model, its text encoder (with the CLIPLoader type) and its VAE belong together.
+const FAMILIES: { name: string; note: string; files: string[] }[] = [
+  { name: 'SDXL', note: 'One checkpoint holds model, text encoder and VAE. ControlNet and IP-Adapter add on to it.', files: [
+    'Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors',
+    'controlnet-union-sdxl-promax.safetensors',
+    'ip-adapter-plus_sdxl_vit-h.safetensors',
+    'CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors',
+  ] },
+  { name: 'Z-Image Turbo', note: 'Load CLIP with type lumina2. Sampler res_multistep, scheduler simple, 8 steps, CFG 1.', files: [
+    'z_image_turbo_bf16.safetensors',
+    'qwen_3_4b.safetensors',
+    'ae.safetensors',
+  ] },
+  { name: 'Krea-2 Turbo', note: 'Load CLIP with type krea2. Sampler euler, scheduler simple, 8 steps, CFG 1.', files: [
+    'krea2_turbo_fp8_scaled.safetensors',
+    'qwen3vl_4b_fp8_scaled.safetensors',
+    'qwen_image_vae.safetensors',
+    'krea2_darkbrush.safetensors',
+  ] },
+  { name: 'Flux.2 Klein 4B', note: 'Load CLIP with type flux2. Flux2Scheduler with 4 steps, CFG 1.', files: [
+    'flux-2-klein-4b.safetensors',
+    'qwen_3_4b.safetensors',
+    'flux2-vae.safetensors',
+  ] },
+  { name: 'Utilities', note: 'Upscaling and background removal.', files: [
+    '4x-UltraSharp.safetensors',
+    'birefnet.safetensors',
+  ] },
+];
+const usedIn = (file: string) => TUTORIALS.filter((t) => t.models.includes(file));
+const inputs = [...new Set(TUTORIALS.flatMap((t) => t.images))].map((f) => ({ f, lessons: TUTORIALS.filter((t) => t.images.includes(f)) }));
+const howto = marked.parse(HOWTO_MD, { async: false, breaks: true }) as string;
+---
+<Base title="Setup and models | Learn ComfyUI" description="Install ComfyUI, get the models each lesson needs, and load a workflow.">
+  <section class="head wrap">
+    <div class="eyebrow">Before mission 00</div>
+    <h1 class="display">Setup and models</h1>
+    <p>Install ComfyUI, open a lesson's workflow, and let ComfyUI download any models it is missing.</p>
+  </section>
+
+  <section class="steps wrap">
+    <article class="step">
+      <span class="mono n">STEP 1</span>
+      <h2 class="display">Install ComfyUI</h2>
+      <p><a href="https://www.comfy.org/download">Download Comfy Desktop</a> for Windows or macOS and install it. It sets up Python and the models folder for you.</p>
+    </article>
+    <article class="step">
+      <span class="mono n">STEP 2</span>
+      <h2 class="display">Load a workflow</h2>
+      <p>Every lesson has a Download workflow button. Drag the file onto the ComfyUI canvas. Start with <a href={lessonUrl(TUTORIALS[0])}>00: node basics</a>.</p>
+    </article>
+    <article class="step">
+      <span class="mono n">STEP 3</span>
+      <h2 class="display">Download missing models</h2>
+      <p>If the workflow needs a model you don't have, ComfyUI lists it and offers to download it into the right folder. Click Download, wait for it to finish, then press Run.</p>
+    </article>
+  </section>
+
+  <section class="wrap">
+    <div class="sec-head"><h2 class="display">Models</h2><span set:html={linkTerms('Model, text encoder and VAE are a matched set. Never swap one without the others.')} /></div>
+    <div class="callout">
+      <div class="mono k">MANUAL DOWNLOAD</div>
+      <p>If ComfyUI does not offer a download, or you prefer to fetch files yourself, use the links below and put each file in the folder shown, inside ComfyUI's <code>models</code> folder. Files marked <span class="rename">rename</span> are published under another name: save them with the name shown here.</p>
+    </div>
+    <div class="families">
+      {FAMILIES.map((fam) => (
+        <article class="family">
+          <div class="hazard"></div>
+          <div class="fam-body">
+            <h3 class="display">{fam.name}</h3>
+            <p class="fam-note" set:html={linkTerms(fam.note)} />
+            <table>
+              <thead><tr><th>File</th><th>Folder</th><th>Lessons</th></tr></thead>
+              <tbody>
+                {fam.files.map((f) => (
+                  <tr>
+                    <td>
+                      <a class="dl" href={MODEL_FILES[f].url} download={f}>
+                        <Icon name="download-simple" size={14} />
+                        <code>{f}</code>
+                      </a>
+                      {MODEL_FILES[f].rename && <span class="rename" title="Published under another name. Save it with this name.">rename</span>}
+                    </td>
+                    <td class="mono folder">models/{MODEL_FILES[f].folder}</td>
+                    <td class="lessons">{usedIn(f).map((t) => <a href={lessonUrl(t)}>{t.n}</a>)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="wrap two">
+    <div>
+      <div class="sec-head"><h2 class="display">Input images</h2></div>
+      <p class="muted">Lessons that start from an image load these from ComfyUI's <code>input</code> folder. They are art from Meridian.</p>
+      <table>
+        <tbody>
+          {inputs.map(({ f, lessons }) => (
+            <tr><td><code>{f}</code></td><td class="lessons">{lessons.map((t) => <a href={lessonUrl(t)}>{t.n}</a>)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="sec-head"><h2 class="display">Using the canvas</h2></div>
+      <div class="prose" set:html={howto} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .head { padding-top: 44px; padding-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  h1 { margin: 0; font-size: clamp(34px, 4vw, 52px); }
+  .head p { margin: 0; font-size: 19px; color: var(--text-2); max-width: 820px; }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding-bottom: 48px; }
+  .step { background: var(--panel); border: 1px solid var(--line); padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .step .n { font-size: 12px; color: var(--orange-text); letter-spacing: 0.1em; }
+  .step h2 { margin: 0; font-size: 22px; }
+  .step p { margin: 0; color: var(--text-2); }
+  .sec-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 18px; color: var(--muted); }
+  .sec-head h2 { margin: 0; font-size: 26px; font-weight: 600; color: var(--text); }
+  .families { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .family { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+  .family .hazard { height: 8px; }
+  .fam-body { padding: 20px 24px 22px; }
+  .family h3 { margin: 0 0 6px; font-size: 22px; }
+  .fam-note { margin: 0 0 14px; color: var(--text-2); font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 500; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 12px 8px 0; }
+  td { padding: 9px 12px 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td code { word-break: break-all; background: transparent; padding: 0; }
+  .dl { display: inline-flex; align-items: flex-start; gap: 8px; color: var(--text); text-decoration: none; }
+  .dl svg { flex-shrink: 0; margin-top: 3px; color: var(--orange-text); }
+  .dl:hover, .dl:hover svg { color: var(--cyan); }
+  .dl:hover code { text-decoration: underline; }
+  .rename { display: inline-block; margin: 4px 0 0 22px; font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid var(--yellow); color: var(--yellow); }
+  .callout .rename { margin: 0; }
+  .callout { background: #231f0e; border: 1px solid #5a4a10; padding: 16px 20px; margin-bottom: 20px; }
+  .callout .k { font-size: 12px; letter-spacing: 0.1em; color: var(--yellow); margin-bottom: 6px; }
+  .callout p { margin: 0 0 8px; color: var(--text-2); }
+  .callout p:last-child { margin-bottom: 0; }
+  .folder { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .lessons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lessons a { font-family: var(--mono); font-size: 12px; padding: 2px 7px; border: 1px solid var(--line-2); color: var(--text-2); text-decoration: none; }
+  .lessons a:hover { border-color: var(--cyan); color: var(--cyan); }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; padding-top: 48px; }
+  .muted { color: var(--muted); margin-top: 0; }
+  @media (max-width: 900px) {
+    .steps, .families, .two { grid-template-columns: minmax(0, 1fr); }
+    .folder { white-space: normal; }
+  }
+</style>

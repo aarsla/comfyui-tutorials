@@ -1,0 +1,62 @@
+:root {
+  --bg: #101418;
+  --panel: #181d23;
+  --panel-2: #1a1f25;
+  --node: #252c34;
+  --line: #262d35;
+  --line-2: #3a434e;
+  --hull: #e9e4d8;
+  --text: #e9e4d8;
+  --text-2: #c4cad1;
+  --muted: #9aa3ad;
+  --orange: #f06a2a;
+  --orange-text: #f07a3a;
+  --cyan: #4fd8e8;
+  --yellow: #e0b400;
+  --display: 'Chakra Petch', sans-serif;
+  --body: 'Barlow', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --gutter: 48px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; font-family: var(--body); font-size: 17px; line-height: 1.55; color: var(--text); background: var(--bg); }
+a { color: var(--orange-text); }
+a:hover { color: #ff9a62; }
+img { max-width: 100%; display: block; }
+code { font-family: var(--mono); font-size: 0.88em; background: #232a32; padding: 1px 5px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.mono { font-family: var(--mono); }
+.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); }
+.display { font-family: var(--display); text-transform: uppercase; font-weight: 700; letter-spacing: 0.01em; }
+.hazard { height: 12px; background: repeating-linear-gradient(-45deg, var(--orange) 0 12px, transparent 12px 24px); }
+.hazard.yellow { background: repeating-linear-gradient(-45deg, var(--yellow) 0 10px, transparent 10px 20px); }
+.wrap { padding-left: var(--gutter); padding-right: var(--gutter); }
+
+.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 22px; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+.btn-primary { background: var(--orange); color: var(--bg); }
+.btn-primary:hover { background: #ff7d40; color: var(--bg); }
+.btn-ghost { border-color: var(--hull); color: var(--hull); background: transparent; }
+.btn-ghost:hover { background: var(--hull); color: var(--bg); }
+
+.chip { display: inline-block; font-family: var(--mono); font-size: 12px; padding: 3px 9px; border: 1px solid var(--line-2); color: var(--text-2); white-space: nowrap; }
+
+/* Markdown from the tutorial notes */
+.prose { color: #d6d2c8; }
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+.prose p, .prose ul, .prose ol { margin: 0 0 0.9em; }
+.prose h3 { font-family: var(--display); font-size: 19px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text); margin: 1.4em 0 0.5em; }
+.prose strong { color: var(--text); }
+.prose li { margin: 0.2em 0; }
+.prose table { border-collapse: collapse; margin: 0 0 1em; font-size: 15px; width: 100%; display: block; overflow-x: auto; }
+.prose th, .prose td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.prose th { color: var(--muted); font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+@media (max-width: 800px) {
+  :root { --gutter: 16px; }
+  body { font-size: 16px; }
+}
